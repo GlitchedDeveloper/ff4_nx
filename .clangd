@@ -1,0 +1,17 @@
+CompileFlags:
+  Compiler: C:/devkitPro/devkitA64/bin/aarch64-none-elf-g++.exe
+
+  Add:
+    - -IC:/devkitPro/libnx/include
+    - -IC:/devkitPro/devkitA64/aarch64-none-elf/include
+    - -IC:/devkitPro/portlibs/switch/include
+    - -D__SWITCH__
+    - -DBRLS_RESOURCES="resources/"
+    - -std=gnu++17
+    - -D__SWITCH__
+    - -D__libnx__
+    - -fno-builtin
+Diagnostics:
+  Suppress:
+    - invalid-constexpr
+    - clang-diagnostic-invalid-constexpr

@@ -1,0 +1,50 @@
+{
+    "configurations": [
+        {
+            "name": "Nintendo Switch",
+
+            "compilerPath": "C:/devkitPro/devkitA64/bin/aarch64-none-elf-g++.exe",
+            "intelliSenseMode": "gcc-arm64",
+
+            "cStandard": "c17",
+            "cppStandard": "gnu++17",
+
+            "defines": [
+                "__SWITCH__",
+                "__GNU__",
+                "_GNU_SOURCE",
+                "_REENTRANT"
+            ],
+
+            "includePath": [
+                "${workspaceFolder}/glaunch/include",
+                "${workspaceFolder}/library/include",
+                "${workspaceFolder}/library/lib",
+                "${workspaceFolder}/library/include/borealis/extern",
+                "${workspaceFolder}/library/include/borealis/extern/**",
+                "${workspaceFolder}/library/lib/extern",
+                "${workspaceFolder}/library/lib/extern/*/include",
+
+                "C:/devkitPro/libnx/include",
+                "C:/devkitPro/devkitA64/aarch64-none-elf/include",
+                "C:/devkitPro/portlibs/switch/include"
+            ],
+
+            "compilerArgs": [
+                "-std=gnu++17",
+                "-D__SWITCH__",
+                "-fPIC"
+            ],
+
+            "browse": {
+                "path": [
+                    "${workspaceFolder}",
+                    "C:/devkitPro/libnx/include",
+                    "C:/devkitPro/portlibs/switch/include"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            }
+        }
+    ],
+    "version": 4
+}
