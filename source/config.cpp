@@ -73,8 +73,8 @@ bool swap_in_vehicle                   = false;
 bool require_modifier_for_battle_pause = false;
 bool augmentless_stat_growth           = false;
 bool better_stick_movement             = true;
-int font_supersampling                 = 1;
-FontScalingMode font_scaling_mode      = FontScalingMode_Pixelated;
+int font_supersampling                 = 16;
+FontScalingMode font_scaling_mode      = FontScalingMode_Smooth;
 
 std::vector<std::string> mod_order;
 std::unordered_map<std::string, bool> mods;

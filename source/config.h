@@ -3,17 +3,17 @@
 #include <switch.h>
 
 #define MEMORY_MB 1024
-#define SO_NAME "ff4/libff4.so"
-#define OBB_FILE "ff4/data.obb"
-#define OBB_MODS "ff4/mods/"
-#define FONTS_DIR "ff4/fonts/"
-#define CONFIG_PATH "ff4/config.ini"
-#define CONTROLS_PATH "ff4/controls.ini"
-#define LOG_NAME "ff4/latest.log"
-#define DATA_PATH "ff4/data"
-#define SAVE_FILENAME "ff4/save"
-#define OPENING_FILE "ff4/opening.mp4"
-#define ACHIEVEMENTS_PATH "ff4/achievements/"
+#define SO_NAME "libff4.so"
+#define OBB_FILE "data.obb"
+#define OBB_MODS "mods/"
+#define FONTS_DIR "fonts/"
+#define CONFIG_PATH "config.ini"
+#define CONTROLS_PATH "controls.ini"
+#define LOG_NAME "latest.log"
+#define DATA_PATH "data"
+#define SAVE_FILENAME "save"
+#define OPENING_FILE "opening.mp4"
+#define ACHIEVEMENTS_PATH "achievements/"
 #define IMGUI_FONT_SIZE 33.0f
 
 #define DEBUG_LOG 0

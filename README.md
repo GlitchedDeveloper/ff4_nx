@@ -5,6 +5,9 @@
 This software is an unofficial, fan-made wrapper that allows for the AARCH64 Android version of Final Fantasy IV (3D Remake) to run natively on the Nintendo Switch with modern enhancements.
 
 ## Changelog
+### 1.0.2
+- Changed file paths
+- Changed default config values
 ### 1.0.1
 - Font-related bugfixes and improvements
 ### 1.0.0
