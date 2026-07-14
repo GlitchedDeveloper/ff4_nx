@@ -15,6 +15,7 @@
 #include "imgui/imgui_impl_switch.h"
 #include "menu/menu.h"
 #include "menu/player_select.h"
+#include "menu/tabs/fonts.h"
 #include "overlay.h"
 #include "pad_manager.h"
 #include "patches.h"
@@ -23,17 +24,18 @@
 
 namespace game {
 
-bool g_menuOpen          = false;
-bool g_playerSelectOpen  = false;
-bool g_encountersEnabled = true;
-float g_gilMultiplier    = 1.0f;
-float g_expMultiplier    = 1.0f;
-bool g_saveAnywhere      = false;
-bool g_debugMenu         = false;
-bool g_UseFakeTouch      = false;
-float g_FakeTouch[2]     = { 0.0f, 0.0f };
-bool g_Launched          = false;
-u64 g_MaxUpdatesPerFrame = 3;
+bool g_menuOpen           = false;
+bool g_playerSelectOpen   = false;
+bool g_encountersEnabled  = true;
+float g_gilMultiplier     = 1.0f;
+float g_expMultiplier     = 1.0f;
+bool g_saveAnywhere       = false;
+bool g_debugMenu          = false;
+bool g_UseFakeTouch       = false;
+float g_FakeTouch[2]      = { 0.0f, 0.0f };
+bool g_Launched           = false;
+bool g_ShouldRebuildFonts = false;
+u64 g_MaxUpdatesPerFrame  = 3;
 
 GLuint capturedFrameTexture = 0;
 bool hasCapturedFrame       = false;
@@ -228,6 +230,8 @@ void start() {
     bridge::readHeader(OBB_FILE);
     bridge::applyModOrder();
     bridge::buildFileMap();
+    bridge::discoverFonts();
+    bridge::applyFontOrder();
     bridge::initFont();
 
     pad_manager::init();
@@ -246,8 +250,18 @@ void start() {
     ImGuiIO& io = ImGui::GetIO();
 
     debugPrintf("game::start: before font load!\n");
-    std::string path  = std::string(FONTS_DIR) + config::font_filename;
-    ImFont* font      = io.Fonts->AddFontFromFileTTF(path.c_str(), 32.0f * IMGUI_SCALE);
+    bool first = true;
+    for (const bridge::FontFile& ff : bridge::fonts) {
+        if (!ff.enabled)
+            continue;
+        ImFontConfig cfg;
+        cfg.ExtraSizeScale = bridge::getFontEmScaleCorrection(ff.path.c_str()) * 2.0f / 3.0f;
+        cfg.MergeMode      = !first;
+        io.Fonts->AddFontFromFileTTF(ff.path.c_str(), IMGUI_FONT_SIZE * IMGUI_SCALE, &cfg);
+        first = false;
+    }
+    if (first)
+        io.Fonts->AddFontDefault();
     ImGuiStyle& style = ImGui::GetStyle();
     ImGui::StyleColorsDark();
     style.ScaleAllSizes(IMGUI_SCALE);
@@ -359,6 +373,11 @@ void start() {
         eglSwapBuffers(display, surface);
 
         menu::postUpdate();
+
+        if (g_ShouldRebuildFonts) {
+            menu::tabs::Fonts::rebuildImGuiAtlas();
+            g_ShouldRebuildFonts = false;
+        }
     }
 
     ImGui_ImplGLES1_Shutdown();

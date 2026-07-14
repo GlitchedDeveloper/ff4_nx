@@ -14,6 +14,7 @@
 #define SAVE_FILENAME "ff4/save"
 #define OPENING_FILE "ff4/opening.mp4"
 #define ACHIEVEMENTS_PATH "ff4/achievements/"
+#define IMGUI_FONT_SIZE 33.0f
 
 #define DEBUG_LOG 0
 
@@ -27,7 +28,6 @@ namespace config {
 extern int screen_width;
 extern int screen_height;
 extern char save_filename[256];
-extern char font_filename[256];
 extern bool user_save_separation;
 extern int joycon_hold_style;
 extern bool multiplayer_enabled;
@@ -81,6 +81,8 @@ extern bool MODEL_CHANGE_CHECK;
 extern bool MODEL_CHANGE_SOUND;
 extern std::vector<std::string> mod_order;
 extern std::unordered_map<std::string, bool> mods;
+extern std::vector<std::string> font_order;
+extern std::unordered_map<std::string, bool> fonts;
 extern bool use_left_stick;
 extern bool use_right_stick;
 extern bool reobtainable_limit_break;
@@ -89,6 +91,11 @@ extern bool swap_in_vehicle;
 extern bool require_modifier_for_battle_pause;
 extern bool augmentless_stat_growth;
 extern bool better_stick_movement;
+extern int font_supersampling;
+extern enum FontScalingMode {
+    FontScalingMode_Smooth    = 0,
+    FontScalingMode_Pixelated = 1,
+} font_scaling_mode;
 
 void read_config(const char* file);
 void mark_for_write();

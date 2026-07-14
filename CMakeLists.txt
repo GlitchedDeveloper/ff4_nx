@@ -40,7 +40,7 @@ set(TARGET ff4_nx)
 
 set(APP_TITLE   "Final Fantasy IV (3D Remake)" CACHE STRING "NACP title")
 set(APP_AUTHOR  "GlitchedDeveloper"            CACHE STRING "NACP author")
-set(APP_VERSION "1.0.0"                        CACHE STRING "NACP version")
+set(APP_VERSION "1.0.1"                        CACHE STRING "NACP version")
 set(APP_ICON    ${CMAKE_SOURCE_DIR}/icon.jpg   CACHE FILEPATH "NRO icon (.jpg)")
 
 set(ARCH_FLAGS    -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE)

@@ -7,6 +7,8 @@
 
 #include "types.h"
 
+struct stbtt_fontinfo;
+
 namespace bridge {
 
 struct OBBArchive
@@ -23,6 +25,18 @@ struct OBBArchive
 
 extern std::vector<OBBArchive> OBBs;
 
+struct FontFile
+{
+    bool enabled = true;
+    std::string path;
+    stbtt_fontinfo* info  = nullptr;
+    unsigned char* buffer = nullptr;
+    float em_scale        = 1.0f;
+    bool loaded           = false;
+};
+
+extern std::vector<FontFile> fonts;
+
 extern s32 framerate;
 typedef struct
 {
@@ -32,8 +46,11 @@ typedef struct
 
 void applyModOrder();
 void buildFileMap();
+void discoverFonts();
+void applyFontOrder();
 jni_bytearray* loadFile(char* str);
 unsigned char* loadFile(const char* str, int* size);
+float getFontEmScaleCorrection(const char* path);
 jni_bytearray* loadSound(char* str);
 jni_bytearray* loadRawFile(char* str);
 jni_bytearray* getSaveFileName();

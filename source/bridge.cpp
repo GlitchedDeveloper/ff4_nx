@@ -600,114 +600,253 @@ jni_intarray* loadTexture(jni_bytearray* bArr) {
 
 int isDeviceAndroidTV() { return 1; }
 
-stbtt_fontinfo* info      = NULL;
-unsigned char* fontBuffer = NULL;
+std::vector<FontFile> fonts;
 
-static inline u32 utf8_decode_unsafe_2(const char* data) {
-    u32 codepoint;
-    codepoint = ((data[0] & 0x1F) << 6);
-    codepoint |= (data[1] & 0x3F);
-    return codepoint;
+static std::vector<FontFile*> g_chain;
+
+void discoverFonts() {
+    fonts.clear();
+    DIR* dir = opendir(FONTS_DIR);
+    if (!dir)
+        return;
+
+    struct dirent* ent;
+    while ((ent = readdir(dir)) != NULL) {
+        const char* dot = strrchr(ent->d_name, '.');
+        if (!dot || strcmp(dot, ".ttf") != 0)
+            continue;
+
+        FontFile ff;
+        ff.path   = std::string(FONTS_DIR) + ent->d_name;
+        ff.loaded = false;
+
+        auto it    = config::fonts.find(ff.path);
+        ff.enabled = (it != config::fonts.end()) ? it->second : true;
+
+        fonts.push_back(std::move(ff));
+    }
+    closedir(dir);
 }
 
-static inline u32 utf8_decode_unsafe_3(const char* data) {
-    u32 codepoint;
-    codepoint = ((data[0] & 0x0F) << 12);
-    codepoint |= (data[1] & 0x3F) << 6;
-    codepoint |= (data[2] & 0x3F);
-    return codepoint;
+void applyFontOrder() {
+    if (fonts.empty())
+        return;
+
+    std::vector<bool> consumed(fonts.size(), false);
+    std::vector<FontFile> reordered;
+    reordered.reserve(fonts.size());
+
+    for (const std::string& p : config::font_order) {
+        for (size_t i = 0; i < fonts.size(); i++) {
+            if (consumed[i])
+                continue;
+            if (fonts[i].path == p) {
+                reordered.push_back(std::move(fonts[i]));
+                consumed[i] = true;
+                break;
+            }
+        }
+    }
+    for (size_t i = 0; i < fonts.size(); i++) {
+        if (!consumed[i])
+            reordered.push_back(std::move(fonts[i]));
+    }
+
+    fonts = std::move(reordered);
 }
 
-static inline u32 utf8_decode_unsafe_4(const char* data) {
-    u32 codepoint;
-    codepoint = ((data[0] & 0x07) << 18);
-    codepoint |= (data[1] & 0x3F) << 12;
-    codepoint |= (data[2] & 0x3F) << 6;
-    codepoint |= (data[3] & 0x3F);
-    return codepoint;
+static inline int utf8_decode(const char* word, int i, int* adv) {
+    unsigned char c = (unsigned char)word[i];
+    int cp;
+    if ((c & 0x80) == 0) {
+        cp   = c;
+        *adv = 1;
+    } else if ((c & 0xE0) == 0xC0) {
+        cp   = ((c & 0x1F) << 6) | ((unsigned char)word[i + 1] & 0x3F);
+        *adv = 2;
+    } else if ((c & 0xF0) == 0xE0) {
+        cp = ((c & 0x0F) << 12)
+            | (((unsigned char)word[i + 1] & 0x3F) << 6)
+            | ((unsigned char)word[i + 2] & 0x3F);
+        *adv = 3;
+    } else {
+        cp = ((c & 0x07) << 18)
+            | (((unsigned char)word[i + 1] & 0x3F) << 12)
+            | (((unsigned char)word[i + 2] & 0x3F) << 6)
+            | ((unsigned char)word[i + 3] & 0x3F);
+        *adv = 4;
+    }
+    return cp;
 }
 
-jni_intarray* drawFont(char* word, int size, int i2, int i3) {
+static size_t findFontForCodepoint(int cp) {
+    for (size_t i = 0; i < g_chain.size(); i++) {
+        if (stbtt_FindGlyphIndex(g_chain[i]->info, cp) != 0)
+            return i;
+    }
+    return 0;
+}
+
+jni_intarray* drawFont(char* word, int draw_area_size, int font_size, int /*i3*/) {
     jni_intarray* texture = reinterpret_cast<jni_intarray*>(malloc(sizeof(jni_intarray)));
-    texture->size         = size * size + 5;
-    texture->elements     = reinterpret_cast<int*>(malloc(texture->size * sizeof(int)));
 
-    memset(texture->elements, 0, texture->size * sizeof(int));
+    if (font_size <= 0)
+        font_size = draw_area_size;
 
-    const int SS = 4;
+    int SS = config::font_supersampling;
 
-    int b_w = size * SS;
-    int b_h = size * SS;
-
-    float scale = stbtt_ScaleForPixelHeight(info, size * SS);
-
-    int ascent, descent, lineGap;
-    stbtt_GetFontVMetrics(info, &ascent, &descent, &lineGap);
-
-    int i = 0;
-    while (word[i]) {
-        i++;
-        if (i == 4)
-            break;
-    }
-
-    int codepoint;
-    switch (i) {
-        case 0:
-            codepoint = 32;
-            break;
-        case 2:
-            codepoint = utf8_decode_unsafe_2(word);
-            break;
-        case 3:
-            codepoint = utf8_decode_unsafe_3(word);
-            break;
-        case 4:
-            codepoint = utf8_decode_unsafe_4(word);
-            break;
-        default:
-            codepoint = word[0];
-            break;
-    }
-
-    int ax;
-    int lsb;
-    stbtt_GetCodepointHMetrics(info, codepoint, &ax, &lsb);
-
-    if (codepoint == 32) {
-        texture->elements[0] = roundf(ax * scale / SS);
+    if (g_chain.empty()) {
+        texture->size        = draw_area_size * draw_area_size + 5;
+        texture->elements    = reinterpret_cast<int*>(calloc(texture->size, sizeof(int)));
+        texture->elements[0] = 1;
         return texture;
     }
 
+    float em_height_px = (float)(font_size * SS);
+
+    int canvas_h   = draw_area_size * SS;
+    float baseline = (canvas_h * 0.5f) + (em_height_px * 0.2f);
+
+    std::vector<float> scales(g_chain.size());
+    for (size_t i = 0; i < g_chain.size(); i++)
+        scales[i] = stbtt_ScaleForMappingEmToPixels(g_chain[i]->info, (float)(font_size * SS));
+
+    float total_advance_px = 0.0f;
+    int prev_cp            = -1;
+    size_t prev_font       = 0;
+    for (int i = 0; word[i];) {
+        int adv;
+        int cp            = utf8_decode(word, i, &adv);
+        size_t fi         = findFontForCodepoint(cp);
+        stbtt_fontinfo* F = g_chain[fi]->info;
+        float sc          = scales[fi];
+        int ax, lsb;
+        stbtt_GetCodepointHMetrics(F, cp, &ax, &lsb);
+        if (prev_cp >= 0 && prev_font == fi)
+            total_advance_px += stbtt_GetCodepointKernAdvance(F, prev_cp, cp) * sc;
+        total_advance_px += ax * sc;
+        prev_cp   = cp;
+        prev_font = fi;
+        i += adv;
+    }
+    int render_width = (int)((total_advance_px + SS * 0.5f) / SS);
+    if (render_width < 1)
+        render_width = 1;
+
+    texture->size     = draw_area_size * draw_area_size + 5;
+    texture->elements = reinterpret_cast<int*>(malloc(texture->size * sizeof(int)));
+    memset(texture->elements, 0, texture->size * sizeof(int));
+    texture->elements[0] = render_width;
+
+    if (word[0] == '\0' || (word[0] == ' ' && word[1] == '\0'))
+        return texture;
+
+    int b_w               = draw_area_size * SS;
+    int b_h               = draw_area_size * SS;
     unsigned char* bitmap = reinterpret_cast<unsigned char*>(calloc(b_w * b_h, sizeof(unsigned char)));
 
-    int c_x1, c_y1, c_x2, c_y2;
-    stbtt_GetCodepointBitmapBox(info, codepoint, scale, scale, &c_x1, &c_y1, &c_x2, &c_y2);
+    prev_cp    = -1;
+    prev_font  = 0;
+    float xpos = 0.0f;
+    for (int i = 0; word[i];) {
+        int adv;
+        int cp            = utf8_decode(word, i, &adv);
+        size_t fi         = findFontForCodepoint(cp);
+        stbtt_fontinfo* F = g_chain[fi]->info;
+        float sc          = scales[fi];
 
-    int y = roundf(ascent * scale) + c_y1 - (200 * scale);
+        int ax, lsb;
+        stbtt_GetCodepointHMetrics(F, cp, &ax, &lsb);
+        if (prev_cp >= 0 && prev_font == fi)
+            xpos += stbtt_GetCodepointKernAdvance(F, prev_cp, cp) * sc;
 
-    int byteOffset = roundf(lsb * scale) + (y * b_w);
+        int x0, y0, x1, y1;
+        stbtt_GetCodepointBitmapBox(F, cp, sc, sc, &x0, &y0, &x1, &y1);
 
-    stbtt_MakeCodepointBitmap(info, bitmap + byteOffset, c_x2 - c_x1, c_y2 - c_y1, b_w, scale, scale, codepoint);
+        int gx = (int)roundf(xpos + x0);
+        int gy = (int)roundf(baseline + y0);
+        int gw = x1 - x0;
+        int gh = y1 - y0;
 
-    texture->elements[0] = (c_x2 - c_x1 + roundf(lsb * scale)) / SS;
-    texture->elements[1] = 0;
-    texture->elements[2] = 0;
+        int sx_off = 0, sy_off = 0;
+        if (gx < 0) {
+            sx_off = -gx;
+            gw += gx;
+            gx = 0;
+        }
+        if (gy < 0) {
+            sy_off = -gy;
+            gh += gy;
+            gy = 0;
+        }
+        if (gx + gw > b_w)
+            gw = b_w - gx;
+        if (gy + gh > b_h)
+            gh = b_h - gy;
 
-    for (int oy = 0; oy < size; oy++) {
-        for (int ox = 0; ox < size; ox++) {
-            int sum = 0;
-            for (int sy = 0; sy < SS; sy++) {
-                for (int sx = 0; sx < SS; sx++) {
-                    int src_x = ox * SS + sx;
-                    int src_y = oy * SS + sy;
-                    sum += bitmap[src_y * b_w + src_x];
+        if (gw > 0 && gh > 0) {
+            if (sx_off == 0 && sy_off == 0) {
+                stbtt_MakeCodepointBitmap(F,
+                    bitmap + gy * b_w + gx, gw, gh, b_w,
+                    sc, sc, cp);
+            } else {
+                int full_w          = x1 - x0;
+                int full_h          = y1 - y0;
+                unsigned char* temp = reinterpret_cast<unsigned char*>(
+                    calloc(full_w * full_h, 1));
+                stbtt_MakeCodepointBitmap(F, temp, full_w, full_h, full_w,
+                    sc, sc, cp);
+                for (int row = 0; row < gh; row++) {
+                    memcpy(bitmap + (gy + row) * b_w + gx,
+                        temp + (sy_off + row) * full_w + sx_off,
+                        gw);
                 }
+                free(temp);
             }
-            int avg                               = sum / (SS * SS);
-            texture->elements[5 + oy * size + ox] = RGBA8(avg, avg, avg, avg);
+        }
+
+        xpos += ax * sc;
+        prev_cp   = cp;
+        prev_font = fi;
+        i += adv;
+    }
+
+    const bool pixelated = (config::font_scaling_mode == config::FontScalingMode_Pixelated);
+
+    if (SS == 1) {
+        for (int oy = 0; oy < draw_area_size - 1; oy++) {
+            for (int ox = 0; ox < draw_area_size; ox++) {
+                int v = bitmap[oy * b_w + ox];
+                if (pixelated)
+                    v = (v >= 128) ? 255 : 0;
+                texture->elements[5 + oy * draw_area_size + ox] = RGBA8(0xFF, 0xFF, 0xFF, v);
+            }
+        }
+    } else {
+        const int cs = SS / 2;
+        for (int oy = 0; oy < draw_area_size - 1; oy++) {
+            for (int ox = 0; ox < draw_area_size; ox++) {
+                int v;
+                if (pixelated) {
+                    int center = bitmap[(oy * SS + cs) * b_w + (ox * SS + cs)];
+                    v          = (center >= 128) ? 255 : 0;
+                } else {
+                    int sum = 0;
+                    for (int sy = 0; sy < SS; sy++) {
+                        const unsigned char* row = bitmap + (oy * SS + sy) * b_w + (ox * SS);
+                        for (int sx = 0; sx < SS; sx++)
+                            sum += row[sx];
+                    }
+                    v = sum / (SS * SS);
+                }
+                texture->elements[5 + oy * draw_area_size + ox] = RGBA8(0xFF, 0xFF, 0xFF, v);
+            }
         }
     }
+
+    int last_row_off = 5 + (draw_area_size - 1) * draw_area_size;
+    for (int ox = 0; ox < draw_area_size; ox++)
+        texture->elements[last_row_off + ox] = RGBA8(0xFF, 0xFF, 0xFF, 0);
 
     free(bitmap);
     return texture;
@@ -757,44 +896,86 @@ char* getEditText() {
 }
 
 void initFont() {
-    long size;
+    // Free any previously loaded font data.
+    for (FontFile& ff : fonts) {
+        if (ff.loaded) {
+            free(ff.info);
+            ff.info = nullptr;
+            free(ff.buffer);
+            ff.buffer = nullptr;
+            ff.loaded = false;
+        }
+    }
+    g_chain.clear();
 
-    if (info != NULL)
-        return;
+    for (FontFile& ff : fonts) {
+        if (!ff.enabled)
+            continue;
 
-    char font_path[256];
-    sprintf(font_path, FONTS_DIR "%s", config::font_filename);
+        FILE* f = fopen(ff.path.c_str(), "rb");
+        if (!f) {
+            debugPrintf("initFont: failed to open %s\n", ff.path.c_str());
+            continue;
+        }
+        fseek(f, 0, SEEK_END);
+        long sz = ftell(f);
+        fseek(f, 0, SEEK_SET);
 
-    FILE* fontFile = fopen(font_path, "rb");
+        ff.buffer = reinterpret_cast<unsigned char*>(malloc(sz));
+        if (!ff.buffer) {
+            fclose(f);
+            continue;
+        }
+        fread(ff.buffer, 1, sz, f);
+        fclose(f);
 
-    fseek(fontFile, 0, SEEK_END);
-    size = ftell(fontFile);
-    fseek(fontFile, 0, SEEK_SET);
+        ff.info = reinterpret_cast<stbtt_fontinfo*>(malloc(sizeof(stbtt_fontinfo)));
+        if (!stbtt_InitFont(ff.info, ff.buffer, 0)) {
+            debugPrintf("initFont: stbtt_InitFont failed for %s\n", ff.path.c_str());
+            free(ff.info);
+            ff.info = nullptr;
+            free(ff.buffer);
+            ff.buffer = nullptr;
+            continue;
+        }
 
-    fontBuffer = reinterpret_cast<unsigned char*>(malloc(size));
-
-    fread(fontBuffer, size, 1, fontFile);
-    fclose(fontFile);
-
-    info = reinterpret_cast<stbtt_fontinfo*>(malloc(sizeof(stbtt_fontinfo)));
-
-    if (!stbtt_InitFont(info, fontBuffer, 0)) {
-        debugPrintf("failed\n");
+        ff.em_scale = stbtt_ScaleForMappingEmToPixels(ff.info, 1.0f);
+        ff.loaded   = true;
+        g_chain.push_back(&ff);
     }
 }
 
 void reinitFont() {
-    if (info != NULL) {
-        free(info);
-        info = NULL;
-    }
-
-    if (fontBuffer != NULL) {
-        free(fontBuffer);
-        fontBuffer = NULL;
-    }
-
     initFont();
+}
+
+float getFontEmScaleCorrection(const char* path) {
+    FILE* f = fopen(path, "rb");
+    if (!f)
+        return 1.0f;
+
+    fseek(f, 0, SEEK_END);
+    long sz = ftell(f);
+    fseek(f, 0, SEEK_SET);
+
+    unsigned char* buf = reinterpret_cast<unsigned char*>(malloc(sz));
+    if (!buf) {
+        fclose(f);
+        return 1.0f;
+    }
+    fread(buf, 1, sz, f);
+    fclose(f);
+
+    stbtt_fontinfo info;
+    float correction = 1.0f;
+    if (stbtt_InitFont(&info, buf, 0)) {
+        float sPix = stbtt_ScaleForPixelHeight(&info, 1.0f);
+        float sEm  = stbtt_ScaleForMappingEmToPixels(&info, 1.0f);
+        if (sPix > 0.0f && sEm > 0.0f)
+            correction = sEm / sPix;
+    }
+    free(buf);
+    return correction;
 }
 
 int getCurrentLanguage() {

@@ -1,22 +1,23 @@
 #pragma once
 
+#include "../../types.h"
 #include "../elements/container.h"
 #include "../tab.h"
 
 namespace menu::tabs {
-class Fonts : public Tab
+class Fonts : public elements::Container, public Tab
 {
   protected:
-    size_t m_Selected        = 0;
-    size_t m_CurrentSelected = -1;
-    size_t m_CurrentElement  = 0;
-    bool m_UpdateScroll      = false;
-    std::vector<std::string> m_Fonts;
+    bool m_IsReordering = false;
+    bool m_Dirty        = false;
+    std::vector<size_t> m_FontIndices;
+    void swap(size_t from, size_t to);
 
   public:
     Fonts();
     void update() override;
-    void postUpdate() override;
+    void unfocus() override;
     bool down(u32 key) override;
+    static void rebuildImGuiAtlas();
 };
 }

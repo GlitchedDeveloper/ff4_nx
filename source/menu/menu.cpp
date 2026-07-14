@@ -65,8 +65,10 @@ void update() {
 
     g_DeltaTime = 1.0f / bridge::framerate;
 
-    if (game::g_Launched && currentTab == 0)
+    if (game::g_Launched && currentTab == 0) {
+        g_Tabs[currentTab]->unfocus();
         currentTab = 1;
+    }
 
     auto special_keybinds = getSpecialKeybinds(g_Pads[0]);
     if (!(padGetButtons(&g_Pads[0]) & special_keybinds[SpecialButton_Modifier])) {
@@ -82,6 +84,7 @@ void update() {
             switch (key) {
                 case FF4Button_Prev:
                     if (currentTab > game::g_Launched ? 1 : 0) {
+                        g_Tabs[currentTab]->unfocus();
                         currentTab--;
                         if (currentTab == 1 && !game::g_Launched)
                             currentTab = 0;
@@ -90,6 +93,7 @@ void update() {
                     break;
                 case FF4Button_Next:
                     if (currentTab < (int)g_Tabs.size() - 1) {
+                        g_Tabs[currentTab]->unfocus();
                         currentTab++;
                         if (currentTab == 1 && !game::g_Launched)
                             currentTab = 2;
@@ -146,6 +150,8 @@ void update() {
                 bool tab_open = ImGui::BeginTabItem(tab->m_Name.c_str(), nullptr, flags);
                 ImGui::PopStyleColor(3);
                 if (ImGui::IsItemClicked()) {
+                    if (currentTab != i)
+                        g_Tabs[currentTab]->unfocus();
                     currentTab = i;
                 }
                 if (tab_open) {
@@ -171,6 +177,7 @@ void postUpdate() {
 }
 
 void close() {
+    g_Tabs[currentTab]->unfocus();
     game::g_menuOpen = false;
     lockAllUntilRelease();
     if (config::marked_for_write)

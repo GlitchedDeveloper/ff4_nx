@@ -14,7 +14,6 @@ namespace config {
 int screen_width                       = 0;
 int screen_height                      = 0;
 char save_filename[256]                = SAVE_FILENAME;
-char font_filename[256]                = "arialuni.ttf";
 bool user_save_separation              = true;
 int joycon_hold_style                  = 0;
 bool multiplayer_enabled               = false;
@@ -74,9 +73,13 @@ bool swap_in_vehicle                   = false;
 bool require_modifier_for_battle_pause = false;
 bool augmentless_stat_growth           = false;
 bool better_stick_movement             = true;
+int font_supersampling                 = 1;
+FontScalingMode font_scaling_mode      = FontScalingMode_Pixelated;
 
 std::vector<std::string> mod_order;
 std::unordered_map<std::string, bool> mods;
+std::vector<std::string> font_order;
+std::unordered_map<std::string, bool> fonts;
 
 void read_config(const char* file) {
     if (appletGetOperationMode() == AppletOperationMode_Console) {
@@ -250,8 +253,17 @@ void read_config(const char* file) {
             mod_order.push_back(key);
             mods[key] = (value == "true");
         } else if (section == "fonts") {
-            if (key == "font")
-                snprintf(font_filename, sizeof(font_filename), "%s", value.c_str());
+            if (key == "font_supersampling")
+                font_supersampling = std::stoi(value);
+            else if (key == "font_scaling_mode") {
+                if (value == "smooth")
+                    font_scaling_mode = FontScalingMode_Smooth;
+                else if (value == "pixelated")
+                    font_scaling_mode = FontScalingMode_Pixelated;
+            } else {
+                font_order.push_back(key);
+                fonts[key] = (value == "true");
+            }
         }
     }
 }
@@ -356,7 +368,10 @@ void write_config() {
     }
 
     out << "\n[fonts]\n";
-    out << "font = " << font_filename << "\n";
+    for (const bridge::FontFile& ff : bridge::fonts)
+        out << ff.path << " = " << (ff.enabled ? "true" : "false") << "\n";
+    out << "font_supersampling = " << font_supersampling << "\n";
+    out << "font_scaling_mode = " << (font_scaling_mode == FontScalingMode_Pixelated ? "pixelated" : "smooth") << "\n";
 
     out.close();
 

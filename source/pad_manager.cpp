@@ -397,10 +397,11 @@ s32 getKeyEvent() {
                 //     }
                 // }
             }
-
-            return 0;
         }
     }
+
+    if (isModifierPressed)
+        return 0;
 
     s32 mask = -1;
     if (config::multiplayer_enabled)

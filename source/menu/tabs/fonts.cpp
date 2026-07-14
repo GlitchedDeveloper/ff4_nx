@@ -1,7 +1,5 @@
 #include "fonts.h"
 
-#include <sys/dirent.h>
-
 #include <cstring>
 
 #include "../../bridge.h"
@@ -10,6 +8,7 @@
 #include "../../imgui/imgui.h"
 #include "../../imgui/imgui_impl_gles1.h"
 #include "../../pad_manager.h"
+#include "../elements/boolean.h"
 
 using namespace pad_manager;
 
@@ -18,99 +17,124 @@ using namespace elements;
 
 Fonts::Fonts()
     : Tab("Fonts") {
-    DIR* dir = opendir(FONTS_DIR);
-    if (dir) {
-        struct dirent* ent;
-        while ((ent = readdir(dir)) != NULL) {
-            if (strstr(ent->d_name, ".ttf") != nullptr) {
-                m_Fonts.push_back(ent->d_name);
-            }
-        }
-        closedir(dir);
-    }
-
-    for (size_t i = 0; i < m_Fonts.size(); i++) {
-        if (strcmp(config::font_filename, m_Fonts[i].c_str()) == 0) {
-            m_Selected = m_CurrentSelected = i;
-            break;
-        }
+    for (size_t i = 0; i < bridge::fonts.size(); i++) {
+        bridge::FontFile& ff = bridge::fonts[i];
+        const char* display  = ff.path.c_str() + sizeof(FONTS_DIR) - 1;
+        m_Elements.push_back(new Boolean(
+            display,
+            ff.enabled,
+            [this, &ff](bool value) {
+                ff.enabled = value;
+                m_Dirty    = true;
+                config::mark_for_write();
+            }));
+        m_FontIndices.push_back(i);
     }
 };
 
 void Fonts::update() {
-    for (size_t i = 0; i < m_Fonts.size(); i++) {
-        bool checked = m_Selected == i;
-        ImVec4 color;
-        if (m_CurrentElement == i) {
-            color = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
-
-            if (m_UpdateScroll) {
-                ImGui::SetScrollHereY(0.5f);
-                m_UpdateScroll = false;
-            }
-        } else {
-            color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+    if (m_CurrentElement < 0)
+        m_CurrentElement = 0;
+    if (m_CurrentElement >= m_Elements.size())
+        m_CurrentElement = m_Elements.size() - 1;
+    for (size_t i = 0; i < m_Elements.size(); i++) {
+        Element* element = m_Elements[i];
+        bool focused     = i == m_CurrentElement;
+        element->setFocused(focused);
+        if (focused && m_IsReordering) {
+            ImGui::Indent();
         }
-        ImVec4 baseColor = ImGui::GetStyleColorVec4(ImGuiCol_FrameBg);
-        ImGui::PushStyleColor(ImGuiCol_CheckboxSelectedBg, baseColor);
-        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, baseColor);
-        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, baseColor);
-        ImGui::PushStyleColor(ImGuiCol_Text, color);
-        if (ImGui::Checkbox(m_Fonts[i].c_str(), &checked)) {
-            if (checked) {
-                m_Selected = i;
-            }
+        if (focused)
+            ImGui::SetScrollHereY();
+        element->update();
+        if (focused && m_IsReordering) {
+            ImGui::Unindent();
         }
-        ImGui::PopStyleColor(4);
     }
 }
 
-void Fonts::postUpdate() {
-    if (m_Selected != m_CurrentSelected) {
-        ImGuiIO& io = ImGui::GetIO();
-        io.Fonts->Clear();
+void Fonts::unfocus() {
+    if (!m_Dirty)
+        return;
+    m_Dirty = false;
 
-        std::string path = FONTS_DIR + m_Fonts[m_Selected];
-        io.Fonts->AddFontFromFileTTF(path.c_str(), 32.0f);
-        io.Fonts->Build();
+    game::g_ShouldRebuildFonts = true;
+}
 
-        ImGui_ImplGLES1_CreateFontsTexture();
+void Fonts::rebuildImGuiAtlas() {
+    ImGuiIO& io = ImGui::GetIO();
+    io.Fonts->Clear();
 
-        strcpy(config::font_filename, m_Fonts[m_Selected].c_str());
+    bool first = true;
+    for (const bridge::FontFile& ff : bridge::fonts) {
+        if (!ff.enabled)
+            continue;
+        ImFontConfig cfg;
+        cfg.ExtraSizeScale = bridge::getFontEmScaleCorrection(ff.path.c_str()) * 2.0f / 3.0f;
+        cfg.MergeMode      = !first;
+        io.Fonts->AddFontFromFileTTF(ff.path.c_str(), IMGUI_FONT_SIZE * game::IMGUI_SCALE, &cfg);
+        first = false;
+    }
+    if (first)
+        io.Fonts->AddFontDefault();
 
-        if (!game::g_Launched) {
-            bridge::reinitFont();
-        }
+    io.Fonts->Build();
+    ImGui_ImplGLES1_CreateFontsTexture();
 
-        m_CurrentSelected = m_Selected;
-
-        config::write_config();
+    if (!game::g_Launched) {
+        bridge::reinitFont();
     }
 }
 
 bool Fonts::down(u32 key) {
-    if (key == FF4Button_Up) {
-        if (m_CurrentElement > 0) {
-            m_CurrentElement--;
-            m_UpdateScroll = true;
-            return true;
-        }
-        return false;
-    }
-    if (key == FF4Button_Down) {
-        if (m_CurrentElement < m_Fonts.size() - 1) {
-            m_CurrentElement++;
-            m_UpdateScroll = true;
-            return true;
-        }
-        return false;
-    }
     if (key == FF4Button_Select) {
-        if (m_Selected != m_CurrentElement) {
-            m_Selected = m_CurrentElement;
+        m_IsReordering = !m_IsReordering;
+        if (!m_IsReordering) {
+            m_Dirty = true;
+            config::mark_for_write();
         }
         return true;
     }
-    return false;
+    if (key == FF4Button_Cancel) {
+        if (m_IsReordering) {
+            m_IsReordering = false;
+            config::mark_for_write();
+            return true;
+        }
+        return false;
+    }
+
+    if (m_IsReordering) {
+        if (key == FF4Button_Up) {
+            if (m_CurrentElement > 0) {
+                swap(m_CurrentElement, m_CurrentElement - 1);
+                m_CurrentElement--;
+            }
+            return true;
+        }
+        if (key == FF4Button_Down) {
+            if (m_CurrentElement < m_Elements.size() - 1) {
+                swap(m_CurrentElement, m_CurrentElement + 1);
+                m_CurrentElement++;
+            }
+            return true;
+        }
+        if (key == FF4Button_Left || key == FF4Button_Right || key == FF4Button_Prev || key == FF4Button_Next)
+            return true;
+        return false;
+    }
+
+    return Container::down(key);
+}
+
+void Fonts::swap(size_t from, size_t to) {
+    std::swap(m_Elements[from], m_Elements[to]);
+    std::swap(m_FontIndices[from], m_FontIndices[to]);
+
+    size_t a = m_FontIndices[from];
+    size_t b = m_FontIndices[to];
+    std::swap(bridge::fonts[a], bridge::fonts[b]);
+
+    std::swap(m_FontIndices[from], m_FontIndices[to]);
 }
 }

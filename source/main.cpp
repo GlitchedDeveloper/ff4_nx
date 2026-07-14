@@ -126,7 +126,7 @@ int main() {
 
     int res = so::load(SO_NAME, heap_so_base, heap_so_limit);
     if (res < 0)
-        fatal_error("Could not load\n%s. code: %d", SO_NAME, res);
+        fatal_error("Could not load %s. code: %d", SO_NAME, res);
 
     so::relocate();
     so::resolve(imports::dynlib_functions, imports::dynlib_numfunctions, 1);

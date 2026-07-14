@@ -15,5 +15,6 @@ extern float g_FakeTouch[2];
 extern bool g_UseFakeTouch;
 extern bool g_Launched;
 extern u64 g_MaxUpdatesPerFrame;
+extern bool g_ShouldRebuildFonts;
 constexpr float IMGUI_SCALE = 1.5f;
 }
