@@ -9,8 +9,7 @@
 #include <switch.h>
 #include <zlib.h>
 
-#include <queue>
-
+#include "ff4_3d_nx/movie_player.h"
 #include "game.h"
 
 extern "C" {
@@ -23,7 +22,6 @@ extern "C" {
 
 #include <GLES/gl.h>
 
-#include "audio/akb.h"
 #include "config.h"
 #include "stb_image.h"
 #include "stb_truetype.h"
@@ -454,7 +452,37 @@ jni_bytearray* loadRawFile(char* str) {
 }
 
 jni_bytearray* loadSound(char* str) {
-    return nullptr;
+    char str2[128], path[256];
+    int file_length;
+    if (strlen(str) == 0 || !strstr(str, "voice/")) {
+        sprintf(str2, "%s.akb", str);
+    } else {
+        if (config::audio_language > -1) {
+            const char* lang_code = lang[config::audio_language];
+            sprintf(str2, "%s%s", lang_code, &str[8]);
+        } else {
+            sprintf(str2, "%s", &str[6]);
+        }
+    }
+
+    sprintf(path, "files/SOUND/BGM/%s", str2);
+    unsigned char* a = loadFromMap(path, &file_length);
+    if (a == NULL) {
+        sprintf(path, "files/SOUND/SE/%s", str2);
+        a = loadFromMap(path, &file_length);
+        if (a == NULL) {
+            sprintf(path, "files/SOUND/VOICE/%s", str2);
+            a = loadFromMap(path, &file_length);
+            if (a == NULL) {
+                return NULL;
+            }
+        }
+    }
+
+    jni_bytearray* result = reinterpret_cast<jni_bytearray*>(malloc(sizeof(jni_bytearray)));
+    result->elements      = a;
+    result->size          = file_length;
+    return result;
 }
 
 u8 isSoundFileExist(char* str) {
@@ -538,42 +566,6 @@ void doubleFPSMultiplier() {
     g_FPSMultiplier *= 2;
 }
 
-static bool g_overclockActive = false;
-static void applyMovieOverclock(bool enable) {
-    if (enable == g_overclockActive)
-        return;
-    static u32 original_cpu_hz, original_mem_hz;
-    if (enable) {
-        if (hosversionAtLeast(8, 0, 0)) {
-            clkrstInitialize();
-            pcvInitialize();
-            ClkrstSession cpu, mem;
-            clkrstOpenSession(&cpu, PcvModuleId_CpuBus, 3);
-            clkrstOpenSession(&mem, PcvModuleId_EMC, 3);
-            clkrstGetClockRate(&cpu, &original_cpu_hz);
-            clkrstGetClockRate(&mem, &original_mem_hz);
-            if (config::overclock_movie_cpu)
-                clkrstSetClockRate(&cpu, 1224000000);
-            if (config::overclock_movie_mem)
-                clkrstSetClockRate(&mem, 1600000000);
-            clkrstCloseSession(&cpu);
-            clkrstCloseSession(&mem);
-            g_overclockActive = true;
-        }
-    } else {
-        ClkrstSession cpu, mem;
-        clkrstOpenSession(&cpu, PcvModuleId_CpuBus, 3);
-        clkrstOpenSession(&mem, PcvModuleId_EMC, 3);
-        clkrstSetClockRate(&cpu, original_cpu_hz);
-        clkrstSetClockRate(&mem, original_mem_hz);
-        clkrstCloseSession(&cpu);
-        clkrstCloseSession(&mem);
-        pcvExit();
-        clkrstExit();
-        g_overclockActive = false;
-    }
-}
-
 jni_intarray* loadTexture(jni_bytearray* bArr) {
     jni_intarray* texture = reinterpret_cast<jni_intarray*>(malloc(sizeof(jni_intarray)));
 
@@ -598,7 +590,7 @@ jni_intarray* loadTexture(jni_bytearray* bArr) {
     return texture;
 }
 
-int isDeviceAndroidTV() { return 1; }
+int isDeviceAndroidTV() { return 0; }
 
 std::vector<FontFile> fonts;
 
@@ -1028,41 +1020,6 @@ int getCurrentLanguage() {
     return 1;
 }
 
-struct MovieState
-{
-    bool active      = false;
-    bool eof_reached = false;
-
-    AVFormatContext* fmt_ctx = nullptr;
-
-    int video_stream_idx      = -1;
-    AVCodecContext* video_ctx = nullptr;
-    SwsContext* sws_ctx       = nullptr;
-    AVFrame* video_frame      = nullptr;
-    int video_width           = 0;
-    int video_height          = 0;
-
-    int audio_stream_idx       = -1;
-    AVCodecContext* audio_ctx  = nullptr;
-    SwrContext* swr_ctx        = nullptr;
-    AVFrame* audio_frame       = nullptr;
-    bool audio_active          = false;
-    u8* audio_scratch          = nullptr;
-    int audio_scratch_capacity = 0;
-
-    AVPacket* packet = nullptr;
-
-    GLuint texture = 0;
-
-    u64 start_tick_ns     = 0;
-    double next_frame_pts = 0.0;
-
-    bool eof_flushed         = false;
-    bool decode_thread_alive = false;
-};
-
-MovieState g_Movie;
-
 s32 framerate = 30;
 
 void setFPS(s32 i) {
@@ -1084,12 +1041,12 @@ void updateAccumulator() {
 
 u64 getTargetUPS() {
     u64 target_ups = framerate * g_FPSMultiplier;
-    if (g_Movie.active && config::limit_movie_fps) {
+    if (movie_is_playing() && config::limit_movie_fps) {
         target_ups = 24;
     }
 
     game::g_MaxUpdatesPerFrame = 3 * g_FPSMultiplier;
-    if (g_Movie.active)
+    if (movie_is_playing())
         game::g_MaxUpdatesPerFrame = 3;
     if (game::g_MaxUpdatesPerFrame < 1)
         game::g_MaxUpdatesPerFrame = 1;
@@ -1133,463 +1090,21 @@ bool isUpdateFrame() {
     return (accumulator * getTargetUPS()) / TICKS_PER_SECOND > 0;
 }
 
-struct DecodedFrame
-{
-    u8* rgba_data = nullptr;
-    double pts    = 0.0;
-};
-
-#define MOVIE_QUEUE_SIZE 4
-
-static std::queue<DecodedFrame> g_frameQueue;
-static pthread_mutex_t g_queueMutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t g_queueCond   = PTHREAD_COND_INITIALIZER;
-static pthread_t g_decodeThread;
-static volatile bool g_decodeThreadStop = false;
-
-double ptsToSeconds(AVRational time_base, s64 pts) {
-    if (pts == AV_NOPTS_VALUE)
-        return 0.0;
-    return pts * av_q2d(time_base);
-}
-
-void movieTeardown() {
-    applyMovieOverclock(false);
-
-    if (g_Movie.decode_thread_alive) {
-        g_decodeThreadStop = true;
-        pthread_mutex_lock(&g_queueMutex);
-        pthread_cond_signal(&g_queueCond);
-        pthread_mutex_unlock(&g_queueMutex);
-        pthread_join(g_decodeThread, nullptr);
-        g_Movie.decode_thread_alive = false;
-        g_decodeThreadStop          = false;
-    }
-
-    while (!g_frameQueue.empty()) {
-        av_free(g_frameQueue.front().rgba_data);
-        g_frameQueue.pop();
-    }
-
-    if (g_Movie.audio_active) {
-        AKBSystem::ClearRawPCM();
-        g_Movie.audio_active = false;
-    }
-    if (g_Movie.texture) {
-        glDeleteTextures(1, &g_Movie.texture);
-        g_Movie.texture = 0;
-    }
-    if (g_Movie.swr_ctx) {
-        swr_free(&g_Movie.swr_ctx);
-        g_Movie.swr_ctx = nullptr;
-    }
-    if (g_Movie.sws_ctx) {
-        sws_freeContext(g_Movie.sws_ctx);
-        g_Movie.sws_ctx = nullptr;
-    }
-    if (g_Movie.audio_frame) {
-        av_frame_free(&g_Movie.audio_frame);
-    }
-    if (g_Movie.audio_scratch) {
-        av_freep(&g_Movie.audio_scratch);
-        g_Movie.audio_scratch_capacity = 0;
-    }
-    if (g_Movie.video_frame) {
-        av_frame_free(&g_Movie.video_frame);
-    }
-    if (g_Movie.packet) {
-        av_packet_free(&g_Movie.packet);
-    }
-    if (g_Movie.audio_ctx) {
-        avcodec_free_context(&g_Movie.audio_ctx);
-    }
-    if (g_Movie.video_ctx) {
-        avcodec_free_context(&g_Movie.video_ctx);
-    }
-    if (g_Movie.fmt_ctx) {
-        avformat_close_input(&g_Movie.fmt_ctx);
-    }
-
-    g_Movie = MovieState();
-}
-
-void queueAudioFrame(AVFrame* frame) {
-    if (!g_Movie.swr_ctx)
-        return;
-
-    const int device_rate = AKBSystem::GetDeviceRate();
-
-    int out_samples = av_rescale_rnd(
-        swr_get_delay(g_Movie.swr_ctx, frame->sample_rate) + frame->nb_samples,
-        device_rate, frame->sample_rate, AV_ROUND_UP);
-
-    if (out_samples > g_Movie.audio_scratch_capacity) {
-        av_freep(&g_Movie.audio_scratch);
-        av_samples_alloc(&g_Movie.audio_scratch, nullptr, 2, out_samples, AV_SAMPLE_FMT_S16, 0);
-        g_Movie.audio_scratch_capacity = out_samples;
-    }
-
-    int converted = swr_convert(g_Movie.swr_ctx, &g_Movie.audio_scratch, out_samples,
-        (const u8**)frame->data, frame->nb_samples);
-
-    if (converted > 0) {
-        AKBSystem::PushRawPCM(reinterpret_cast<s16*>(g_Movie.audio_scratch), converted);
-        g_Movie.audio_active = true;
-    }
-}
-
-static bool decodeFrameIntoBuffer(u8*& out_rgba, double& out_pts) {
-    while (av_read_frame(g_Movie.fmt_ctx, g_Movie.packet) >= 0) {
-        if (g_Movie.packet->stream_index == g_Movie.video_stream_idx) {
-            int ret = avcodec_send_packet(g_Movie.video_ctx, g_Movie.packet);
-            av_packet_unref(g_Movie.packet);
-            if (ret < 0)
-                continue;
-
-            ret = avcodec_receive_frame(g_Movie.video_ctx, g_Movie.video_frame);
-            if (ret == AVERROR(EAGAIN))
-                continue;
-            if (ret < 0)
-                return false;
-
-            int buf_size        = av_image_get_buffer_size(AV_PIX_FMT_RGBA,
-                g_Movie.video_width, g_Movie.video_height, 1);
-            u8* buf             = reinterpret_cast<u8*>(av_malloc(buf_size));
-            u8* dst[4]          = { buf, nullptr, nullptr, nullptr };
-            int dst_linesize[4] = { g_Movie.video_width * 4, 0, 0, 0 };
-
-            sws_scale(g_Movie.sws_ctx, g_Movie.video_frame->data, g_Movie.video_frame->linesize,
-                0, g_Movie.video_height, dst, dst_linesize);
-
-            AVRational tb = g_Movie.fmt_ctx->streams[g_Movie.video_stream_idx]->time_base;
-            out_rgba      = buf;
-            out_pts       = ptsToSeconds(tb, g_Movie.video_frame->best_effort_timestamp);
-            return true;
-        } else if (g_Movie.packet->stream_index == g_Movie.audio_stream_idx) {
-            int ret = avcodec_send_packet(g_Movie.audio_ctx, g_Movie.packet);
-            av_packet_unref(g_Movie.packet);
-            if (ret < 0)
-                continue;
-
-            while (avcodec_receive_frame(g_Movie.audio_ctx, g_Movie.audio_frame) == 0) {
-                queueAudioFrame(g_Movie.audio_frame);
-            }
-            continue;
-        } else {
-            av_packet_unref(g_Movie.packet);
-        }
-    }
-
-    if (!g_Movie.eof_flushed) {
-        g_Movie.eof_flushed = true;
-        avcodec_send_packet(g_Movie.video_ctx, nullptr);
-    }
-
-    while (true) {
-        int ret = avcodec_receive_frame(g_Movie.video_ctx, g_Movie.video_frame);
-        if (ret < 0)
-            return false;
-
-        int buf_size        = av_image_get_buffer_size(AV_PIX_FMT_RGBA,
-            g_Movie.video_width, g_Movie.video_height, 1);
-        u8* buf             = reinterpret_cast<u8*>(av_malloc(buf_size));
-        u8* dst[4]          = { buf, nullptr, nullptr, nullptr };
-        int dst_linesize[4] = { g_Movie.video_width * 4, 0, 0, 0 };
-
-        sws_scale(g_Movie.sws_ctx, g_Movie.video_frame->data, g_Movie.video_frame->linesize,
-            0, g_Movie.video_height, dst, dst_linesize);
-
-        AVRational tb = g_Movie.fmt_ctx->streams[g_Movie.video_stream_idx]->time_base;
-        out_rgba      = buf;
-        out_pts       = ptsToSeconds(tb, g_Movie.video_frame->best_effort_timestamp);
-        return true;
-    }
-}
-
-static void* decodeThreadFunc(void*) {
-    while (!g_decodeThreadStop) {
-        u8* rgba_data = nullptr;
-        double pts    = 0.0;
-
-        if (!decodeFrameIntoBuffer(rgba_data, pts)) {
-            g_Movie.eof_reached = true;
-            pthread_cond_signal(&g_queueCond);
-            break;
-        }
-
-        pthread_mutex_lock(&g_queueMutex);
-        while (g_frameQueue.size() >= MOVIE_QUEUE_SIZE && !g_decodeThreadStop) {
-            pthread_cond_wait(&g_queueCond, &g_queueMutex);
-        }
-        if (g_decodeThreadStop) {
-            av_free(rgba_data);
-            pthread_mutex_unlock(&g_queueMutex);
-            break;
-        }
-        DecodedFrame f;
-        f.rgba_data = rgba_data;
-        f.pts       = pts;
-        g_frameQueue.push(f);
-        pthread_cond_signal(&g_queueCond);
-        pthread_mutex_unlock(&g_queueMutex);
-    }
-    return nullptr;
-}
-
 void playMovie() {
-    if (g_Movie.active)
-        stopMovie();
-
-    if (config::overclock_movie_cpu || config::overclock_movie_mem)
-        applyMovieOverclock(true);
-
-    if (avformat_open_input(&g_Movie.fmt_ctx, OPENING_FILE, nullptr, nullptr) < 0) {
-        debugPrintf("playMovie: failed to open %s\n", OPENING_FILE);
-        return;
-    }
-
-    if (avformat_find_stream_info(g_Movie.fmt_ctx, nullptr) < 0) {
-        debugPrintf("playMovie: failed to find stream info\n");
-        movieTeardown();
-        return;
-    }
-
-    for (unsigned int i = 0; i < g_Movie.fmt_ctx->nb_streams; i++) {
-        AVMediaType type = g_Movie.fmt_ctx->streams[i]->codecpar->codec_type;
-        if (type == AVMEDIA_TYPE_VIDEO && g_Movie.video_stream_idx < 0) {
-            g_Movie.video_stream_idx = i;
-        } else if (type == AVMEDIA_TYPE_AUDIO && g_Movie.audio_stream_idx < 0) {
-            g_Movie.audio_stream_idx = i;
-        }
-    }
-
-    if (g_Movie.video_stream_idx < 0) {
-        debugPrintf("playMovie: no video stream found\n");
-        movieTeardown();
-        return;
-    }
-
-    AVCodecParameters* vpar = g_Movie.fmt_ctx->streams[g_Movie.video_stream_idx]->codecpar;
-    const AVCodec* vcodec   = avcodec_find_decoder(vpar->codec_id);
-    if (!vcodec) {
-        debugPrintf("playMovie: no decoder for video codec\n");
-        movieTeardown();
-        return;
-    }
-
-    g_Movie.video_ctx = avcodec_alloc_context3(vcodec);
-    avcodec_parameters_to_context(g_Movie.video_ctx, vpar);
-
-    g_Movie.video_ctx->thread_count = 3;
-    g_Movie.video_ctx->thread_type  = FF_THREAD_SLICE | FF_THREAD_FRAME;
-
-    if (avcodec_open2(g_Movie.video_ctx, vcodec, nullptr) < 0) {
-        debugPrintf("playMovie: failed to open video codec\n");
-        movieTeardown();
-        return;
-    }
-
-    g_Movie.video_width  = g_Movie.video_ctx->width;
-    g_Movie.video_height = g_Movie.video_ctx->height;
-
-    g_Movie.sws_ctx = sws_getContext(
-        g_Movie.video_width, g_Movie.video_height, g_Movie.video_ctx->pix_fmt,
-        g_Movie.video_width, g_Movie.video_height, AV_PIX_FMT_RGBA,
-        SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
-
-    g_Movie.video_frame = av_frame_alloc();
-
-    if (g_Movie.audio_stream_idx >= 0) {
-        AVCodecParameters* apar = g_Movie.fmt_ctx->streams[g_Movie.audio_stream_idx]->codecpar;
-        const AVCodec* acodec   = avcodec_find_decoder(apar->codec_id);
-        if (acodec) {
-            g_Movie.audio_ctx = avcodec_alloc_context3(acodec);
-            avcodec_parameters_to_context(g_Movie.audio_ctx, apar);
-            if (avcodec_open2(g_Movie.audio_ctx, acodec, nullptr) == 0) {
-                g_Movie.audio_frame = av_frame_alloc();
-
-                AVChannelLayout out_layout = AV_CHANNEL_LAYOUT_STEREO;
-                int device_rate            = AKBSystem::GetDeviceRate();
-
-                swr_alloc_set_opts2(&g_Movie.swr_ctx,
-                    &out_layout, AV_SAMPLE_FMT_S16, device_rate,
-                    &g_Movie.audio_ctx->ch_layout, g_Movie.audio_ctx->sample_fmt, g_Movie.audio_ctx->sample_rate,
-                    0, nullptr);
-                swr_init(g_Movie.swr_ctx);
-
-                debugPrintf("playMovie: routing movie audio through AKBSystem (device rate=%d, channels=%d)\n",
-                    device_rate, AKBSystem::GetDeviceChannels());
-
-                AKBSystem::ClearRawPCM();
-                AKBSystem::SetRawPCMVolume(1.0f);
-            } else {
-                debugPrintf("playMovie: failed to open audio codec\n");
-                avcodec_free_context(&g_Movie.audio_ctx);
-                g_Movie.audio_stream_idx = -1;
-            }
-        }
-    }
-
-    glGenTextures(1, &g_Movie.texture);
-    glBindTexture(GL_TEXTURE_2D, g_Movie.texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, g_Movie.video_width, g_Movie.video_height, 0,
-        GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-
-    g_Movie.packet = av_packet_alloc();
-
-    g_Movie.active              = false;
-    g_Movie.eof_reached         = false;
-    g_Movie.eof_flushed         = false;
-    g_Movie.decode_thread_alive = false;
-    g_Movie.next_frame_pts      = 0.0;
-
-    u8* first_rgba   = nullptr;
-    double first_pts = 0.0;
-    if (!decodeFrameIntoBuffer(first_rgba, first_pts)) {
-        debugPrintf("playMovie: failed to decode first frame\n");
-        g_Movie.eof_reached = true;
-        g_Movie.active      = true;
-        return;
-    }
-
-    glBindTexture(GL_TEXTURE_2D, g_Movie.texture);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, g_Movie.video_width, g_Movie.video_height,
-        GL_RGBA, GL_UNSIGNED_BYTE, first_rgba);
-
-    g_Movie.start_tick_ns = armTicksToNs(armGetSystemTick()) - (u64)(first_pts * 1.0e9);
-
-    av_free(first_rgba);
-    g_Movie.next_frame_pts = first_pts;
-    g_Movie.active         = true;
-
-    g_decodeThreadStop = false;
-    if (pthread_create(&g_decodeThread, nullptr, decodeThreadFunc, nullptr) == 0) {
-        g_Movie.decode_thread_alive = true;
-    } else {
-        debugPrintf("playMovie: failed to create decode thread\n");
-    }
+    movie_play(OPENING_FILE, 1);
+    return;
 }
 
 void stopMovie() {
-    if (!g_Movie.active)
-        return;
-    movieTeardown();
-}
-
-static void tickAndRenderMovie() {
-    if (!g_Movie.active)
-        return;
-
-    if (g_Movie.eof_reached) {
-        stopMovie();
-        return;
-    } else {
-        double elapsed = (armTicksToNs(armGetSystemTick()) - g_Movie.start_tick_ns) / 1.0e9;
-
-        const int MAX_FRAMES_PER_TICK = 5;
-        int frames_advanced           = 0;
-
-        while (elapsed >= g_Movie.next_frame_pts && frames_advanced < MAX_FRAMES_PER_TICK) {
-            pthread_mutex_lock(&g_queueMutex);
-            if (g_frameQueue.empty()) {
-                pthread_mutex_unlock(&g_queueMutex);
-                break;
-            }
-            DecodedFrame frame = g_frameQueue.front();
-            g_frameQueue.pop();
-            pthread_cond_signal(&g_queueCond);
-            pthread_mutex_unlock(&g_queueMutex);
-
-            glBindTexture(GL_TEXTURE_2D, g_Movie.texture);
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, g_Movie.video_width, g_Movie.video_height,
-                GL_RGBA, GL_UNSIGNED_BYTE, frame.rgba_data);
-            av_free(frame.rgba_data);
-
-            g_Movie.next_frame_pts = frame.pts;
-            frames_advanced++;
-        }
-
-        if (frames_advanced >= MAX_FRAMES_PER_TICK) {
-            g_Movie.start_tick_ns = armTicksToNs(armGetSystemTick()) - (u64)(g_Movie.next_frame_pts * 1.0e9);
-        }
-    }
-
-    if (!g_Movie.active)
-        return;
-
-    int sw = config::screen_width;
-    int sh = config::screen_height;
-
-    glViewport(0, 0, sw, sh);
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    glOrthof(0.0f, (float)sw, (float)sh, 0.0f, -1.0f, 1.0f);
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_BLEND);
-    glDisable(GL_CULL_FACE);
-    glActiveTexture(GL_TEXTURE0);
-    glClientActiveTexture(GL_TEXTURE0);
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, g_Movie.texture);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
-    glDisableClientState(GL_COLOR_ARRAY);
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-    const GLfloat verts[8] = {
-        0.0f,
-        0.0f,
-        (float)sw,
-        0.0f,
-        0.0f,
-        (float)sh,
-        (float)sw,
-        (float)sh,
-    };
-    const GLfloat texcoords[8] = {
-        0.0f,
-        0.0f,
-        1.0f,
-        0.0f,
-        0.0f,
-        1.0f,
-        1.0f,
-        1.0f,
-    };
-
-    glVertexPointer(2, GL_FLOAT, 0, verts);
-    glTexCoordPointer(2, GL_FLOAT, 0, texcoords);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    glDisable(GL_TEXTURE_2D);
-
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
+    movie_stop();
+    return;
 }
 
 u8 getMovieState() {
-    if (g_Movie.active)
-        tickAndRenderMovie();
-    return g_Movie.active ? 1 : 0;
-}
-
-bool isMoviePlaying() {
-    return g_Movie.active;
+    bool is_playing = movie_is_playing();
+    if (is_playing) {
+        movie_render();
+    }
+    return is_playing;
 }
 }

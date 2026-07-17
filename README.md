@@ -5,6 +5,12 @@
 This software is an unofficial, fan-made wrapper that allows for the AARCH64 Android version of Final Fantasy IV (3D Remake) to run natively on the Nintendo Switch with modern enhancements.
 
 ## Changelog
+### 1.0.3
+- Font Scale Option
+- Updated [Movie Player](https://github.com/NaGaa95/ff4_3d_nx/blob/main/source/movie_player.c)
+- Updated [Audio Engine](https://github.com/NaGaa95/ff4_3d_nx/blob/main/source/opensles.c)
+- Improved UI Customization
+- UI Fixes
 ### 1.0.2
 - Changed file paths
 - Changed default config values
@@ -147,6 +153,7 @@ Do not ask for help pirating the game. Support will not be provided for users wi
 - [givethesourceplox](https://github.com/givethesourceplox) - [Bully NX](https://github.com/givethesourceplox/bully-NX)
 - [fgsfdsfgs](https://github.com/fgsfdsfgs) - [Max Payne Mobile Nintendo Switch port](https://github.com/fgsfdsfgs/max_nx)
 - [Alessio Tosto](https://github.com/Rinnegatamante) - [Final Fantasy 4 Vita](https://github.com/Rinnegatamante/ff4_vita)
+- [naga](https://github.com/NaGaa95) - [Final Fantasy IV 3D — Nintendo Switch port](https://github.com/NaGaa95/ff4_3d_nx)
 ### Included Libraries
 - [Omar Cornut](https://www.miracleworld.net/) - [Dear ImGui](https://github.com/ocornut/imgui)
 - [Alexis Engelke](https://github.com/aengelke) - [Disarm](https://github.com/aengelke/disarm)

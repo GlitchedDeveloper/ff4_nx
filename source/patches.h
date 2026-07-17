@@ -17,9 +17,6 @@ namespace game {
     extern babil::world::WorldStateScheduler::cls* wssInstance_;
     extern babil::Font::cls* FontInstance_;
 }
-namespace audio {
-    void patch();
-}
 namespace jni {
     extern char fake_env[0x1000];
     void patch();

@@ -22,18 +22,14 @@ bool dfps_battles_enabled              = false;
 float dfps_battles_mult                = 1.0f;
 int game_startup_part                  = -1;
 bool show_fps                          = false;
-bool hide_back_button                  = true;
-bool hide_vehicle_buttons              = true;
 bool remove_newgameplus_limit          = false;
-bool fix_titlepart                     = true;
+bool clean_title                       = true;
 int language                           = -1;
 int audio_language                     = -1;
 bool show_secret_achievements          = false;
 bool show_achievement_popup            = true;
 bool log_to_file                       = false;
 bool show_frame_graph                  = false;
-bool overclock_movie_cpu               = false;
-bool overclock_movie_mem               = false;
 bool limit_movie_fps                   = true;
 bool show_game_speed_mult              = true;
 bool guaranteed_encounter              = false;
@@ -75,6 +71,17 @@ bool augmentless_stat_growth           = false;
 bool better_stick_movement             = true;
 int font_supersampling                 = 16;
 FontScalingMode font_scaling_mode      = FontScalingMode_Smooth;
+int internal_font_scale                = 2;
+bool remove_menu_button                = true;
+bool remove_map_button                 = true;
+bool remove_back_button                = true;
+bool remove_optimize_button            = true;
+bool remove_remove_button              = true;
+bool remove_abilities_button           = true;
+bool remove_invert_button              = true;
+bool remove_skip_button                = true;
+bool remove_disembark_button           = true;
+bool remove_sort_button                = true;
 
 std::vector<std::string> mod_order;
 std::unordered_map<std::string, bool> mods;
@@ -137,12 +144,28 @@ void read_config(const char* file) {
             else if (key == "better_stick_movement")
                 better_stick_movement = (value == "true");
         } else if (section == "ui") {
-            if (key == "hide_back_button")
-                hide_back_button = (value == "true");
-            else if (key == "hide_vehicle_buttons")
-                hide_vehicle_buttons = (value == "true");
-            else if (key == "fix_titlepart")
-                fix_titlepart = (value == "true");
+            if (key == "remove_menu_button")
+                remove_menu_button = (value == "true");
+            else if (key == "remove_map_button")
+                remove_map_button = (value == "true");
+            else if (key == "remove_back_button")
+                remove_back_button = (value == "true");
+            else if (key == "remove_optimize_button")
+                remove_optimize_button = (value == "true");
+            else if (key == "remove_remove_button")
+                remove_remove_button = (value == "true");
+            else if (key == "remove_abilities_button")
+                remove_abilities_button = (value == "true");
+            else if (key == "remove_invert_button")
+                remove_invert_button = (value == "true");
+            else if (key == "remove_skip_button")
+                remove_skip_button = (value == "true");
+            else if (key == "remove_disembark_button")
+                remove_disembark_button = (value == "true");
+            else if (key == "remove_sort_button")
+                remove_sort_button = (value == "true");
+            else if (key == "clean_title")
+                clean_title = (value == "true");
         } else if (section == "overlay") {
             if (key == "show_fps")
                 show_fps = (value == "true");
@@ -157,11 +180,7 @@ void read_config(const char* file) {
             else if (key == "show_update_graph")
                 show_update_graph = (value == "true");
         } else if (section == "movie") {
-            if (key == "overclock_movie_cpu")
-                overclock_movie_cpu = (value == "true");
-            else if (key == "overclock_movie_mem")
-                overclock_movie_mem = (value == "true");
-            else if (key == "limit_movie_fps")
+            if (key == "limit_movie_fps")
                 limit_movie_fps = (value == "true");
         } else if (section == "multiplayer") {
             if (key == "multiplayer_enabled")
@@ -260,7 +279,9 @@ void read_config(const char* file) {
                     font_scaling_mode = FontScalingMode_Smooth;
                 else if (value == "pixelated")
                     font_scaling_mode = FontScalingMode_Pixelated;
-            } else {
+            } else if (key == "internal_font_scale")
+                internal_font_scale = std::stoi(value);
+            else {
                 font_order.push_back(key);
                 fonts[key] = (value == "true");
             }
@@ -292,9 +313,17 @@ void write_config() {
     out << "better_stick_movement = " << (better_stick_movement ? "true" : "false") << "\n";
 
     out << "\n[ui]\n";
-    out << "hide_back_button = " << (hide_back_button ? "true" : "false") << "\n";
-    out << "hide_vehicle_buttons = " << (hide_vehicle_buttons ? "true" : "false") << "\n";
-    out << "fix_titlepart = " << (fix_titlepart ? "true" : "false") << "\n";
+    out << "remove_menu_button = " << (remove_menu_button ? "true" : "false") << "\n";
+    out << "remove_map_button = " << (remove_map_button ? "true" : "false") << "\n";
+    out << "remove_back_button = " << (remove_back_button ? "true" : "false") << "\n";
+    out << "remove_optimize_button = " << (remove_optimize_button ? "true" : "false") << "\n";
+    out << "remove_remove_button = " << (remove_remove_button ? "true" : "false") << "\n";
+    out << "remove_abilities_button = " << (remove_abilities_button ? "true" : "false") << "\n";
+    out << "remove_invert_button = " << (remove_invert_button ? "true" : "false") << "\n";
+    out << "remove_skip_button = " << (remove_skip_button ? "true" : "false") << "\n";
+    out << "remove_disembark_button = " << (remove_disembark_button ? "true" : "false") << "\n";
+    out << "remove_sort_button = " << (remove_sort_button ? "true" : "false") << "\n";
+    out << "clean_title = " << (clean_title ? "true" : "false") << "\n";
 
     out << "\n[overlay]\n";
     out << "show_fps = " << (show_fps ? "true" : "false") << "\n";
@@ -305,8 +334,6 @@ void write_config() {
     out << "show_update_graph = " << (show_update_graph ? "true" : "false") << "\n";
 
     out << "\n[movie]\n";
-    out << "overclock_movie_cpu = " << (overclock_movie_cpu ? "true" : "false") << "\n";
-    out << "overclock_movie_mem = " << (overclock_movie_mem ? "true" : "false") << "\n";
     out << "limit_movie_fps = " << (limit_movie_fps ? "true" : "false") << "\n";
 
     out << "\n[multiplayer]\n";
@@ -372,6 +399,7 @@ void write_config() {
         out << ff.path << " = " << (ff.enabled ? "true" : "false") << "\n";
     out << "font_supersampling = " << font_supersampling << "\n";
     out << "font_scaling_mode = " << (font_scaling_mode == FontScalingMode_Pixelated ? "pixelated" : "smooth") << "\n";
+    out << "internal_font_scale = " << internal_font_scale << "\n";
 
     out.close();
 

@@ -147,6 +147,12 @@ int debugPrintf(const char* text, ...) {
     return 0;
 }
 
+static uint8_t s_tls_block[0x1000] __attribute__((aligned(16)));
+void tls_setup_guard(void) {
+    *(uint64_t*)(s_tls_block + 0x28) = 0x0123456789ABCDEFull;
+    armSetTlsRw(s_tls_block);
+}
+
 void retvoid(void) { return; }
 
 int ret0(void) { return 0; }

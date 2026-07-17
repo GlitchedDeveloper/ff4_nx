@@ -15,8 +15,11 @@
 
 namespace babil {
 
-extern int (*render)(char*, int, int);
+extern void (*initApp)(void* env);
+extern int (*render)(char*, void*, int);
 extern int (*touch)(int, int, int, int, float, float, float, float);
+
+extern int* fontScale;
 
 typedef s32 fx32;
 struct VecFx32
@@ -235,8 +238,16 @@ namespace sys2d {
         struct cls
         {
             u8 unk[0xe8];
-            u32 flags;
+            u32 m_Flags;
+            u8 unk2[0xc];
+            s32 m_PosX;
+            s32 m_PosY;
+            u8 unk3[0x98];
         };
+        static_assert(offsetof(cls, m_Flags) == 0xe8);
+        static_assert(offsetof(cls, m_PosX) == 0xf8);
+        static_assert(offsetof(cls, m_PosY) == 0xfc);
+        static_assert(sizeof(cls) == 0x198);
     }
 }
 
@@ -1377,13 +1388,38 @@ namespace dgs {
 }
 
 namespace title {
-    namespace TitleContents {
+    namespace Title2Ds {
         struct cls
         {
-            u8 unk[0x1550];
+            u8 unk[0x150];
+            sys2d::Sprite3d::cls m_Continue;
+            sys2d::Sprite3d::cls m_NewGame;
+            sys2d::Sprite3d::cls m_LoadGame;
+            sys2d::Sprite3d::cls unk2;
+            sys2d::Sprite3d::cls unk3;
+            sys2d::Sprite3d::cls m_FF4TAY;
+            sys2d::Sprite3d::cls m_CloudSave;
+            sys2d::Sprite3d::cls m_PrivacyPolicy;
+            sys2d::Sprite3d::cls m_GooglePlay;
+            sys2d::Sprite3d::cls m_Achievements;
+            sys2d::Sprite3d::cls m_SQEX;
+            u8 unk4[0x270];
             u32 m_ContentMask;
             u32 m_FocusedIndex;
         };
+        static_assert(offsetof(cls, m_Continue) == 0x150);
+        static_assert(offsetof(cls, m_NewGame) == 0x2e8);
+        static_assert(offsetof(cls, m_ContentMask) == 0x1548);
+        static_assert(offsetof(cls, m_FocusedIndex) == 0x154c);
+        extern void (*update)(cls* self);
+    }
+    namespace TitleContents {
+        struct cls
+        {
+            u8 unk[0x8];
+            Title2Ds::cls m_Title2Ds;
+        };
+        static_assert(offsetof(cls, m_Title2Ds) == 0x8);
         extern void (*update)(cls* self);
     }
     namespace TitleSubState {

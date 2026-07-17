@@ -79,11 +79,7 @@ AccountUid getUid() {
 }
 
 int main() {
-    SDL_Init(SDL_INIT_AUDIO);
     Result rc;
-    rc = appletInitialize();
-    if (R_FAILED(rc))
-        fatal_error("appletInitialize failed.");
     rc = setInitialize();
     if (R_FAILED(rc))
         fatal_error("setInitialize failed.");
@@ -101,13 +97,13 @@ int main() {
         if (R_FAILED(rc)) {
             debugPrintf("accountInitialize failed: 0x%x\n", rc);
             setExit();
-            return 1;
+            return 0;
         }
         AccountUid uid = getUid();
         if (uid.uid[0] == 0 && uid.uid[1] == 0) {
             setExit();
             accountExit();
-            return 1;
+            return 0;
         } else {
             sprintf(config::save_filename, SAVE_FILENAME "/%lX-%lX", uid.uid[1], uid.uid[0]);
             mkdir(config::save_filename, 0777);
@@ -122,6 +118,14 @@ int main() {
         pad_manager::read_controls(controls_path);
     }
 
+    rc = appletInitialize();
+    if (R_FAILED(rc))
+        fatal_error("appletInitialize failed.");
+
+    SDL_SetMainReady();
+    if (SDL_Init(SDL_INIT_AUDIO) < 0)
+        debugPrintf("SDL_Init(audio) failed: %s\n", SDL_GetError());
+
     check_syscalls();
 
     int res = so::load(SO_NAME, heap_so_base, heap_so_limit);
@@ -133,7 +137,6 @@ int main() {
 
     babil::init();
     patches::game::patch();
-    patches::audio::patch();
     patches::jni::patch();
     game::init();
 

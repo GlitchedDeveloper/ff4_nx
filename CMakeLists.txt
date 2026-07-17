@@ -40,7 +40,7 @@ set(TARGET ff4)
 
 set(APP_TITLE   "Final Fantasy IV (3D Remake)" CACHE STRING "NACP title")
 set(APP_AUTHOR  "GlitchedDeveloper"            CACHE STRING "NACP author")
-set(APP_VERSION "1.0.2"                        CACHE STRING "NACP version")
+set(APP_VERSION "1.0.3"                        CACHE STRING "NACP version")
 set(APP_ICON    ${CMAKE_SOURCE_DIR}/icon.jpg   CACHE FILEPATH "NRO icon (.jpg)")
 
 set(ARCH_FLAGS    -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE)
@@ -80,9 +80,9 @@ file(GLOB_RECURSE FF4_SOURCES CONFIGURE_DEPENDS
 )
 list(FILTER FF4_SOURCES EXCLUDE REGEX "/source/disarm/.*")
 
-add_executable(${TARGET} ${FF4_SOURCES})
+add_executable(${TARGET}.elf ${FF4_SOURCES})
 
-target_link_libraries(${TARGET} PRIVATE
+target_link_libraries(${TARGET}.elf PRIVATE
     disarm64::disarm64
     -lavformat -lavcodec -lswscale -lswresample -lavutil
     -ldav1d -lbz2
@@ -100,16 +100,16 @@ if(NACP_TOOL AND NRO_TOOL)
     add_custom_command(
         OUTPUT  ${NACP_FILE}
         COMMAND ${NACP_TOOL} --create ${APP_TITLE} ${APP_AUTHOR} ${APP_VERSION} ${NACP_FILE}
-        DEPENDS ${TARGET}
+        DEPENDS ${TARGET}.elf
         COMMENT "[ff4_nx] generating ${TARGET}.nacp"
         VERBATIM
     )
     add_custom_command(
         OUTPUT  ${NRO_FILE}
-        COMMAND ${NRO_TOOL} $<TARGET_FILE:${TARGET}> ${NRO_FILE}
+        COMMAND ${NRO_TOOL} $<TARGET_FILE:${TARGET}.elf> ${NRO_FILE}
                 --icon=${APP_ICON}
                 --nacp=${NACP_FILE}
-        DEPENDS ${TARGET} ${NACP_FILE} ${APP_ICON}
+        DEPENDS ${TARGET}.elf ${NACP_FILE} ${APP_ICON}
         COMMENT "[ff4_nx] generating ${TARGET}.nro"
         VERBATIM
     )

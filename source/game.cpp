@@ -1,13 +1,14 @@
 #include "game.h"
 
 #include <GLES/egl.h>
+#include <SDL2/SDL.h>
 #include <dirent.h>
 #include <switch.h>
 
 #include <cstring>
 
 #include "achievement.h"
-#include "audio/akb.h"
+#include "babil.h"
 #include "bridge.h"
 #include "config.h"
 #include "imgui/imgui.h"
@@ -236,7 +237,6 @@ void start() {
 
     pad_manager::init();
     vibration::init();
-    AKBSystem::Init();
 
     if (!init_renderer()) {
         debugPrintf("game::start: renderer initialization FAILED!\n");
@@ -277,8 +277,13 @@ void start() {
     g_Launched = config::skip_launcher;
     debugPrintf("game::start: before game loop!\n");
 
+    babil::initApp(patches::jni::fake_env);
+
     static AppletOperationMode lastMode = (AppletOperationMode)-1;
+    static bool hasSetFontScale         = false;
+    static int frame                    = 0;
     while (appletMainLoop()) {
+
         AppletOperationMode currentMode = appletGetOperationMode();
         if (lastMode != currentMode) {
             if (currentMode == AppletOperationMode_Console) {
@@ -302,6 +307,11 @@ void start() {
         float mult                = bridge::getFPSMultiplier();
         static bool isUpdateFrame = false;
         if (g_Launched) {
+            if (!hasSetFontScale) {
+                *babil::fontScale = config::internal_font_scale;
+                hasSetFontScale   = true;
+            }
+
             isUpdateFrame = bridge::isUpdateFrame();
 
             if (isUpdateFrame) {
@@ -324,11 +334,10 @@ void start() {
                         g_UseFakeTouch = false;
                     }
 
-                    AKBSystem::Update();
                     babil::touch(0, 0, reportNum, reportNum, coordinates[0], coordinates[1], coordinates[2], coordinates[3]);
                 }
 
-                babil::render(patches::jni::fake_env, 0, config::screen_width);
+                babil::render(patches::jni::fake_env, nullptr, frame++);
                 captureScreen();
             } else {
                 drawCapturedFrame();
@@ -383,7 +392,6 @@ void start() {
     ImGui_ImplGLES1_Shutdown();
     ImGui::DestroyContext();
     pad_manager::exit();
-    AKBSystem::Quit();
 }
 
 }

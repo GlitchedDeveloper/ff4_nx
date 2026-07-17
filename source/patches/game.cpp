@@ -126,11 +126,31 @@ namespace ui {
         DECLARE_TRAMPOLINE(babil::ui::CWidgetMng::addWidget, addWidget_t);
         void addWidget(babil::ui::CWidgetMng::cls* self, s32 id, s32 x, s32 y, s32 width, s32 height, s32 text_color, s32 msd, s32 flags) {
             // debugPrintf("addWidget: id: 0x%X, x: %d, y: %d, width: %d, height: %d, text_color: %d, msd: %d, flags: %d\n", id, x, y, width, height, text_color, msd, flags);
-            if (msd != 0) {
-                std::string string = utf16_to_utf8(babil::dgs::DGSMsdGetString(msd, 0, babil::dgs::DGSMSD_ALL)).c_str();
-                // debugPrintf("msd: %s\n", string.c_str());
-                if (config::hide_back_button && string == "Back")
+            if (msd != 0 && flags & 1) {
+                if (config::remove_menu_button && msd == 50001)
                     return;
+                if (config::remove_map_button && msd == 50030)
+                    return;
+                if (config::remove_back_button && msd == 1000117)
+                    return;
+                if (config::remove_optimize_button && msd == 50203)
+                    return;
+                if (config::remove_remove_button && msd == 50202)
+                    return;
+                if (config::remove_abilities_button && msd == 50011)
+                    return;
+                if (config::remove_invert_button && msd == 50504)
+                    return;
+                if (config::remove_skip_button && msd == 50022)
+                    return;
+                if (config::remove_disembark_button && msd == 50031)
+                    return;
+                if (config::remove_sort_button && msd == 50102)
+                    return;
+                // std::string string = utf16_to_utf8(babil::dgs::DGSMsdGetString(msd, 0, babil::dgs::DGSMSD_ALL)).c_str();
+                // debugPrintf("msd: %s %d\n", string.c_str(), msd);
+                // if (config::hide_back_button && string == "Back")
+                //     return;
             }
 
             // if (flags == 10 && id == 0x7) {
@@ -220,18 +240,18 @@ namespace world {
         }
     }
 
-    namespace WSVehicleMove {
-        DECLARE_TRAMPOLINE(babil::world::WSVehicleMove::wsProcess, wsProcess_t);
-        u64 wsProcess(babil::world::WSVehicleMove::cls* self, babil::world::WorldStateContext::cls* p_WorldStateContext) {
-            auto ret = wsProcess_t(self, p_WorldStateContext);
-            if (config::hide_vehicle_buttons) {
-                babil::ui::CWidgetMng::deleteWidgetRange(babil::ui::g_WidgetMng, 0x17, 1);
-                babil::ui::CWidgetMng::deleteWidgetRange(babil::ui::g_WidgetMng, 0x18, 1);
-                babil::ui::CWidgetMng::deleteWidgetRange(babil::ui::g_WidgetMng, 0x19, 1);
-            }
-            return ret;
-        }
-    }
+    // namespace WSVehicleMove {
+    //     DECLARE_TRAMPOLINE(babil::world::WSVehicleMove::wsProcess, wsProcess_t);
+    //     u64 wsProcess(babil::world::WSVehicleMove::cls* self, babil::world::WorldStateContext::cls* p_WorldStateContext) {
+    //         auto ret = wsProcess_t(self, p_WorldStateContext);
+    //         if (config::hide_vehicle_buttons) {
+    //             babil::ui::CWidgetMng::deleteWidgetRange(babil::ui::g_WidgetMng, 0x17, 1);
+    //             babil::ui::CWidgetMng::deleteWidgetRange(babil::ui::g_WidgetMng, 0x18, 1);
+    //             babil::ui::CWidgetMng::deleteWidgetRange(babil::ui::g_WidgetMng, 0x19, 1);
+    //         }
+    //         return ret;
+    //     }
+    // }
 
     namespace MSSConfig {
         // widgets:
@@ -587,27 +607,40 @@ namespace debug {
 
 namespace title {
     namespace TitleContents {
+        void removeSprite3D(babil::sys2d::Sprite3d::cls& sprite) {
+            sprite.m_Flags |= 1;
+            sprite.m_PosX = 0x7FFFF000;
+            sprite.m_PosY = 0x7FFFF000;
+        }
+
         DECLARE_TRAMPOLINE(babil::title::TitleContents::update, update_t);
         void update(babil::title::TitleContents::cls* self) {
-            if (config::fix_titlepart) {
-                self->m_ContentMask &= 0b111;
+            if (config::clean_title) {
+                removeSprite3D(self->m_Title2Ds.m_FF4TAY);
+                removeSprite3D(self->m_Title2Ds.m_CloudSave);
+                removeSprite3D(self->m_Title2Ds.m_PrivacyPolicy);
+                removeSprite3D(self->m_Title2Ds.m_GooglePlay);
+                removeSprite3D(self->m_Title2Ds.m_Achievements);
+                removeSprite3D(self->m_Title2Ds.m_SQEX);
+
+                self->m_Title2Ds.m_ContentMask &= 0b111;
                 if (babil::ui::g_WidgetMng->m_FocusedElement - 0x10000U >= 3) {
                     bool at_top    = false;
                     bool at_bottom = false;
 
-                    if (self->m_ContentMask & 0b1)
-                        at_top = self->m_FocusedIndex == 0;
-                    else if (self->m_ContentMask & 0b10)
-                        at_top = self->m_FocusedIndex == 1;
-                    else if (self->m_ContentMask & 0b100)
-                        at_top = self->m_FocusedIndex == 2;
+                    if (self->m_Title2Ds.m_ContentMask & 0b1)
+                        at_top = self->m_Title2Ds.m_FocusedIndex == 0;
+                    else if (self->m_Title2Ds.m_ContentMask & 0b10)
+                        at_top = self->m_Title2Ds.m_FocusedIndex == 1;
+                    else if (self->m_Title2Ds.m_ContentMask & 0b100)
+                        at_top = self->m_Title2Ds.m_FocusedIndex == 2;
 
-                    if (self->m_ContentMask & 0b100)
-                        at_bottom = self->m_FocusedIndex == 2;
-                    else if (self->m_ContentMask & 0b10)
-                        at_bottom = self->m_FocusedIndex == 1;
-                    else if (self->m_ContentMask & 0b1)
-                        at_bottom = self->m_FocusedIndex == 0;
+                    if (self->m_Title2Ds.m_ContentMask & 0b100)
+                        at_bottom = self->m_Title2Ds.m_FocusedIndex == 2;
+                    else if (self->m_Title2Ds.m_ContentMask & 0b10)
+                        at_bottom = self->m_Title2Ds.m_FocusedIndex == 1;
+                    else if (self->m_Title2Ds.m_ContentMask & 0b1)
+                        at_bottom = self->m_Title2Ds.m_FocusedIndex == 0;
 
                     u32 mask = babil::ds::CPad::repeat(babil::ds::g_Pad);
 
@@ -624,9 +657,9 @@ namespace title {
                         }
 
                         if (at_top && !going_down) {
-                            self->m_FocusedIndex = 3;
+                            self->m_Title2Ds.m_FocusedIndex = 3;
                         } else if (at_bottom && going_down) {
-                            self->m_FocusedIndex = 3;
+                            self->m_Title2Ds.m_FocusedIndex = 3;
                         }
                     }
                 }
@@ -1003,7 +1036,7 @@ void patch() {
 
     HOOK_FUNCTION_T(world::WorldStateScheduler::wssInitialize);
     HOOK_FUNCTION_T(world::WorldStateScheduler::wssAddStateSchedule);
-    HOOK_FUNCTION_T(world::WSVehicleMove::wsProcess);
+    // HOOK_FUNCTION_T(world::WSVehicleMove::wsProcess);
 
     HOOK_FUNCTION_T(world::CCameraVibration::startVibration);
     HOOK_FUNCTION_T(world::CCameraVibration::ccbUpdate);

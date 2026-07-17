@@ -20,6 +20,8 @@ void debugPrintf_setCompatDelayMs(int ms);
 
 void debugBacktrace(void);
 
+void tls_setup_guard(void);
+
 void retvoid(void);
 int ret0(void);
 int ret1(void);

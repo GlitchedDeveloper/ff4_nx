@@ -6,8 +6,11 @@ namespace babil {
 
 #define DECLARE(name) decltype(name) name = nullptr
 
+DECLARE(initApp);
 DECLARE(render);
 DECLARE(touch);
+
+DECLARE(fontScale);
 
 DECLARE(OSi_Panic);
 DECLARE(OS_Printf);
@@ -679,8 +682,11 @@ DECLARE(ds::snd::dssndUnloadBGM2);
 DECLARE(ds::snd::dssndUnloadBGMAll);
 
 void init() {
+    GET_FUNCTION(initApp, "_Z7initAppP7_JNIEnv");
     GET_FUNCTION(render, "render");
     GET_FUNCTION(touch, "touch");
+
+    GET_VARIABLE(fontScale, "fontScale");
 
     GET_FUNCTION(OSi_Panic, "_Z9OSi_PanicPKciS0_z");
     GET_FUNCTION(OS_Printf, "_Z9OS_PrintfPKcz");

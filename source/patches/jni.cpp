@@ -23,6 +23,7 @@
 using namespace bridge;
 
 namespace patches::jni {
+
 int this_width;
 int this_height;
 void updateViewportSize(int32_t width, int32_t height, uint8_t portrait) {
@@ -91,10 +92,12 @@ static NameToMethodID name_to_method_ids[] = {
     { "loadFile", LOAD_FILE },
     { "loadRawFile", LOAD_RAW_FILE },
     { "getLanguage", GET_LANGUAGE },
+    { "getLanguage2", GET_LANGUAGE },
     { "getSaveFileName", GET_SAVEFILENAME },
     { "createSaveFile", CREATE_SAVEFILE },
     { "loadTexture", LOAD_TEXTURE },
     { "isDeviceAndroidTV", IS_DEVICE_ANDROID_TV },
+    { "getDeviceAndroidTV", IS_DEVICE_ANDROID_TV },
     { "drawFont", DRAW_FONT },
     { "createEditText", CREATE_EDIT_TEXT },
     { "getEditText", GET_EDIT_TEXT },
