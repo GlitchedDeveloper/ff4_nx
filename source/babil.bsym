@@ -1,0 +1,1753 @@
+include <GLES/gl.h>;
+itype GLint = u32;
+itype GLsizei = u32;
+itype GLuint = u32;
+itype GLenum = u32;
+itype GLboolean = u8;
+itype GLfloat = float;
+
+type fx32 = s32;
+type NNSG2dChar = c16;
+
+void babilCommand_CE_CameraPos(ScriptEngine& scriptEngine); -> _Z25babilCommand_CE_CameraPosR12ScriptEngine
+void babilCommand_CE_SetupCameraMotion(ScriptEngine& scriptEngine); -> _Z33babilCommand_CE_SetupCameraMotionR12ScriptEngine
+void babilCommand_ClearCountJump(ScriptEngine& scriptEngine); -> _Z27babilCommand_ClearCountJumpR12ScriptEngine
+
+s32 CoreAudioOutInit(s32, s32, uptr callback); -> CoreAudioOutInit
+s32 CoreAudioOutKick(); -> CoreAudioOutKick
+s32 CoreAudioOutQueueBuffer(void* buffer, size_t size); -> CoreAudioOutQueueBuffer
+void CoreAudioOutRelease(); -> CoreAudioOutRelease
+s32 CoreAudioOutResume(); -> CoreAudioOutResume
+s32 CoreAudioOutSuspend(); -> CoreAudioOutSuspend
+
+void free_count(void*); -> _Z10free_countPv
+fx32 FX_Div(fx32 frame, fx32 framerate); -> _Z6FX_Divii
+
+void G2_SetWnd0Position(s32 x1, s32 y1, s32 x2, s32 y2); -> _Z18G2_SetWnd0Positioniiii
+void GX_SetWideMode(void*, bool wide); -> _Z14GX_SetWideModeib
+
+void initApp(void* env); -> _Z7initAppP7_JNIEnv
+
+void* malloc_count(size_t); -> _Z12malloc_countm
+
+void NNS_G2dTickCellAnimation(NNSG2dCellAnimation* pCellAnim, fx32 frames); -> _Z24NNS_G2dTickCellAnimationP19NNSG2dCellAnimationi
+void NNS_SndPlayerSetPlayerVolume(s32 playerNo, s32 volume); -> _Z28NNS_SndPlayerSetPlayerVolumeii
+void NNS_SndPlayerStopSeqBySeqArcIdx(s32 seqArcNo, s32 index, s32 frames); -> _Z31NNS_SndPlayerStopSeqBySeqArcIdxiii
+void NNS_SndUpdate(); -> _Z13NNS_SndUpdatev
+
+void OS_Printf(const c8* fmt, ...); -> _Z9OS_PrintfPKcz
+void OSi_Panic(const c8* file, s32 line, const c8* msg, ...); -> _Z9OSi_PanicPKciS0_z
+
+s32 render(s8*, void*, s32); -> render
+
+s32 touch(s32, s32, s32, s32, float, float, float, float); -> touch
+
+CCharacterMng characterMng; -> characterMng
+
+s32 fontScale; -> fontScale
+
+s8* g_env; -> g_env
+
+u32 LCD_HEIGHT; -> LCD_HEIGHT
+u32 LCD_WIDTH; -> LCD_WIDTH
+
+u32 memCount; -> memCount
+
+u32 texCount; -> texCount
+
+enum enAchievementCheckTimings u32 {
+    Always: 0;
+    EventStart: .0;
+    EventFinish: .1;
+    PlayNewGame: .2;
+    FreeMove: .3;
+    FreeVehicle: .4;
+    BattleEnd: .5;
+    Reported: .6;
+    UseAbilityItem: .7;
+    ShopSell: .8;
+}
+
+enum enAchievementCheckTypes u32 {
+    Flag: 0;
+    FlagRange: 1;
+    HardModeBeat: 2;
+    BeatCount: 3;
+    GetItem: 4;
+    GetDecant: 5;
+    GetDecantCnt: 6;
+    LearnSummon: 7;
+    LearnSummonCnt: 8;
+    CompletedMap: 9;
+    OverPlayerLevel: 10;
+    Gill: 11;
+    MonsterKillCount: 12;
+    MonsterDictionary: 13;
+    MonsterPartyKill: 14;
+    NoCheck: 15;
+    Field: 16;
+    AchievementComp: 17;
+}
+
+// Per-monster bestiary entry (2 bytes). kill() caps m_KillCount at 999 and clears
+// bits 14..15 via `& 0x3fff`.
+bit MonsterMania u16 {
+    0    : bool Encountered;
+    1    : bool EncounteredAlt;
+    2    : bool InLibrary;
+    3    : bool unk;
+    4-13 : u16 KillCount;
+}
+
+struct VecFx32[0xc] {
+    0x0 : fx32 \x;
+    0x4 : fx32 \y;
+    0x8 : fx32 \z;
+}
+
+struct NNSG3dResMdl {}
+
+struct NNSG3dResMdlSet {}
+
+struct NNSG3dResTex {}
+
+struct NNSG3dResFileHeader {}
+
+struct NNSG2dCellAnimation {}
+
+struct AchievementFlagParam[0xc] {
+    0x0 : s32 Bank;
+    0x4 : s32 Offset;
+    0x8 : bool Value;
+}
+
+struct AchievementFlagRangeParam[0x10] {
+    0x0 : s32 Bank;
+    0x4 : s32 Start;
+    0x8 : s32 End;
+    0xc : bool Value;
+}
+
+struct AchievementHardModeBeatParam[0x4] {
+    0x0 : s32 MonsterPartyId;
+}
+
+struct AchievementBeatCountParam[0x8] {
+    0x0 : s32 MonsterPartyId;
+    0x4 : s32 Count;
+}
+
+struct AchievementGetItemParam[0x4] {
+    0x0 : s32 ItemId;
+}
+
+struct AchievementGetDecantParam[0x4] {
+    0x0 : s32 DecantId;
+}
+
+struct AchievementGetDecantCntParam[0x4] {
+    0x0 : s32 Count;
+}
+
+struct AchievementLearnSummonParam[0x8] {
+    0x0 : pl::PLAYER_TYPES Player;
+    0x4 : common::ABILITY_ID AbilityId;
+}
+
+struct AchievementLearnSummonCntParam[0x2c] {
+    0x0  : AchievementFlagParam[2] Flags;
+    0x24 : pl::PLAYER_TYPES Player;
+    0x28 : s32 Count;
+}
+
+struct AchievementCompletedMapParam {}
+
+struct AchievementOverPlayerLevelParam[0x8] {
+    0x0 : pl::PLAYER_TYPES Player;
+    0x4 : u32 Level;
+}
+
+struct AchievementGillParam {
+    0x0 : u32 Amount;
+}
+
+struct AchievementMonsterKillCountParam[0x4] {
+    0x0 : u32 Count;
+}
+
+struct AchievementMonsterDictionaryParam[0x4] {
+    0x0 : u32 Amount;
+}
+
+struct AchievementMonsterPartyKillParam[0x4] {
+    0x0 : u32 MonsterPartyId;
+}
+
+struct AchievementNoCheckParam {}
+
+struct AchievementFieldParam[0x30] {
+    0x0  : AchievementFlagParam[2] Flags;
+    0x24 : s32 FieldType;
+    0x28 : s32 FieldMatch1;
+    0x2c : s32 FieldMatch2;
+}
+
+struct AchievementCompParam {}
+
+struct AchievementParam[0x140] {
+    0x0  : c8[0x40] Identifier;
+    0x40 : enAchievementCheckTimings Timing;
+    0x44 : enAchievementCheckTypes Type;
+    0x48 : {
+        s32[0x3e] Data;
+        AchievementFlagParam[20] FlagParam;
+        AchievementFlagRangeParam[14] FlagRangeParam;
+        AchievementHardModeBeatParam HardModeBeatParam;
+        AchievementBeatCountParam BeatCountParam;
+        AchievementGetItemParam[60] GetItemParam;
+        AchievementGetDecantParam[60] GetDecantParam;
+        AchievementGetDecantCntParam GetDecantCntParam;
+        AchievementLearnSummonParam[30] LearnSummonParam;
+        AchievementLearnSummonCntParam LearnSummonCntParam;
+        AchievementCompletedMapParam CompletedMapParam;
+        AchievementOverPlayerLevelParam[30] OverPlayerLevelParam;
+        AchievementGillParam GillParam;
+        AchievementMonsterKillCountParam MonsterKillCountParam;
+        AchievementMonsterDictionaryParam MonsterDictionaryParam;
+        AchievementMonsterPartyKillParam[60] MonsterPartyKillParam;
+        AchievementNoCheckParam NoCheckParam;
+        AchievementFieldParam FieldParam;
+        AchievementCompParam AchievementCompParam;
+    };
+}
+
+struct ReportEntry[0x10] {
+    0x0 : u32 State;
+    0x8 : AchievementParam* Param;
+}
+
+struct FuncEntry[0x10] {
+    0x0 : void* funcPtr;
+    0x8 : uptr flags;
+}
+
+// AchievementChecker - 0x18 bytes. Ghidra mislabels the fields; asm writes
+// x1->[0x00], x2->[0x10], x3->[0x08].
+AchievementChecker[0x18] {
+    0x0  : AchievementReporter* AchievementReporter;
+    0x8  : AchievementCheckFuncs* AchievementCheckFuncs;
+    0x10 : AchievementResource* AchievementResource;
+
+    void Ctor(this); -> _ZN18AchievementCheckerC1Ev
+    void Dtor(this); -> _ZN18AchievementCheckerD1Ev
+    void init(this, AchievementReporter* reporter, AchievementResource* resource, AchievementCheckFuncs* checkFuncs); -> _ZN18AchievementChecker4initEP19AchievementReporterP19AchievementResourceP21AchievementCheckFuncs
+    void update(this, enAchievementCheckTimings timing); -> _ZN18AchievementChecker6updateE25enAchievementCheckTimings
+}
+
+// AchievementCheckFuncs - 0x138 bytes. m_Funcs[18] order: flag, flagRange,
+// hardModeBeat, beatCount, getItem, getDecant, getDecantCnt, learnSummon,
+// learnSummonCnt, completedMap, overPlayerLevel, gill, monsterKillCount,
+// monsterDictionary, monsterKillParty, noCheck, field, achievementComp.
+// FuncEntry.flags low bit = indirect (funcPtr is a vtable base, flags>>1 is offset).
+AchievementCheckFuncs {
+    0x0   : void* AchievementResource;
+    0x8   : FuncEntry[18] Funcs;
+    0x128 : s32 GetDecantCntCache;
+    0x12c : s32 MonsterKillCountCache;
+    0x130 : s32 MonsterDictionaryCache;
+
+    u32 achievementComp(this, AchievementParam* param); -> _ZN21AchievementCheckFuncs15achievementCompEP16AchievementParam
+    u32 beatCount(this, AchievementParam* param); -> _ZN21AchievementCheckFuncs9beatCountEP16AchievementParam
+    u32 callFunc(this, AchievementParam* param); -> _ZN21AchievementCheckFuncs8callFuncEP16AchievementParam
+    void clearCacheParam(this); -> _ZN21AchievementCheckFuncs15clearCacheParamEv
+    u32 completedMap(this, AchievementParam* param); -> _ZN21AchievementCheckFuncs12completedMapEP16AchievementParam
+    void Ctor(this); -> _ZN21AchievementCheckFuncsC1Ev
+    void Dtor(this); -> _ZN21AchievementCheckFuncsD1Ev
+    u32 field(this, AchievementParam* param); -> _ZN21AchievementCheckFuncs5fieldEP16AchievementParam
+    u32 flag(this, AchievementParam* param); -> _ZN21AchievementCheckFuncs4flagEP16AchievementParam
+    u32 flagRange(this, AchievementParam* param); -> _ZN21AchievementCheckFuncs9flagRangeEP16AchievementParam
+    u32 getDecant(this, AchievementParam* param); -> _ZN21AchievementCheckFuncs9getDecantEP16AchievementParam
+    u32 getDecantCnt(this, AchievementParam* param); -> _ZN21AchievementCheckFuncs12getDecantCntEP16AchievementParam
+    void getDecantItemName(s32 itemId, c8* outBuf); -> _ZN21AchievementCheckFuncs17getDecantItemNameEiPc
+    u32 getItem(this, AchievementParam* param); -> _ZN21AchievementCheckFuncs7getItemEP16AchievementParam
+    u32 gill(this, AchievementParam* param); -> _ZN21AchievementCheckFuncs4gillEP16AchievementParam
+    u32 hardModeBeat(this, AchievementParam* param); -> _ZN21AchievementCheckFuncs12hardModeBeatEP16AchievementParam
+    void init(this, AchievementResource* resource); -> _ZN21AchievementCheckFuncs4initEP19AchievementResource
+    u32 learnSummon(this, AchievementParam* param); -> _ZN21AchievementCheckFuncs11learnSummonEP16AchievementParam
+    u32 learnSummonCnt(this, AchievementParam* param); -> _ZN21AchievementCheckFuncs14learnSummonCntEP16AchievementParam
+    u32 monsterDictionary(this, AchievementParam* param); -> _ZN21AchievementCheckFuncs17monsterDictionaryEP16AchievementParam
+    u32 monsterKillCount(this, AchievementParam* param); -> _ZN21AchievementCheckFuncs16monsterKillCountEP16AchievementParam
+    u32 monsterKillParty(this, AchievementParam* param); -> _ZN21AchievementCheckFuncs16monsterKillPartyEP16AchievementParam
+    u32 noCheck(this, AchievementParam* param); -> _ZN21AchievementCheckFuncs7noCheckEP16AchievementParam
+    u32 overPlayerLevel(this, AchievementParam* param); -> _ZN21AchievementCheckFuncs15overPlayerLevelEP16AchievementParam
+
+    s32 DecantItemTbl; -> _ZN21AchievementCheckFuncs13DecantItemTblE
+}
+
+AchievementContext {
+    u8* getArchiveReportArray(this); -> _ZN18AchievementContext21getArchiveReportArrayEv
+
+    this instance_; -> _ZN18AchievementContext9instance_E
+}
+
+// AchievementReporter - 0x100c bytes. Pending-report queue submitted to Google Play.
+AchievementReporter[0x100c] {
+    0x0    : ReportEntry[0x100] Entries;
+    0x1000 : u32 Count;
+    0x1004 : u32 _reserved;
+    0x1008 : s32 RetryFrames;
+
+    void addParam(this, AchievementParam& param); -> _ZN19AchievementReporter8addParamER16AchievementParam
+    void Ctor(this); -> _ZN19AchievementReporterC1Ev
+    void Dtor(this); -> _ZN19AchievementReporterD1Ev
+    void eraseReported(this); -> _ZN19AchievementReporter13eraseReportedEv
+    s32 finish(this, const c8* identifier); -> _ZN19AchievementReporter6finishEPKc
+    void init(this); -> _ZN19AchievementReporter4initEv
+    bool isAllReported(const this); -> _ZNK19AchievementReporter13isAllReportedEv
+    bool isReportedSecondReport(this); -> _ZN19AchievementReporter22isReportedSecondReportEv
+    void syncSaveData(this, AchievementResource* resource); -> _ZN19AchievementReporter12syncSaveDataEP19AchievementResource
+    void update(this); -> _ZN19AchievementReporter6updateEv
+}
+
+// AchievementResource - holds the AchievementParam[] array. Helpers (getNum, etc.)
+// are only reachable via PLT stubs at 0x00564570/0x00564580/0x005645a0/0x005645b0.
+AchievementResource {
+    0x0 : void* Params;
+    0x8 : s32 Field8;
+}
+
+btl {
+    enum DEBUG_FLAG u32 {
+        SURELY_MAX_DAMAGE: 0;
+        QUICK_WAIT: 1;
+        ENEMY_INVINCIBLE: 2;
+        FRIEND_INVINCIBLE: 3;
+        RESTART: 4;
+        SURELY_ESCAPE: 5;
+        SURELY_CONDITION: 6;
+        TRANSFIX: 7;
+        MDEF_INVALIDATION: 8;
+        QUICK_EVENT: 9;
+        SURELY_HIT: 10;
+        SURELY_MISS: 11;
+        SURELY_CRITICAL: 12;
+        MONSTER_STOP_ACTION: 13;
+        DAMAGE_OVER_LIMIT: 14;
+        OPEN_ENEMY_HP: 15;
+        PHYSICS_RANDOM_MAX: 16;
+        MAGIC_RANDOM_MAX: 17;
+        QUICK_TURN: 18;
+        DRAW_CHAR_TOUCH_RECT: 19;
+        MODEL_CHANGE_CHECK: 20;
+        MODEL_CHANGE_SOUND: 21;
+    }
+
+    u32 battleSpeedRate(); -> _ZN3btl15battleSpeedRateEv
+
+    AcquiredGoldDrawer {
+        void update(this); -> _ZN3btl18AcquiredGoldDrawer6updateEv
+    }
+
+    BaseBattleCharacter {
+        0x10c : bool IsEnemy;
+
+        bool isInvincible(this); -> _ZN3btl19BaseBattleCharacter12isInvincibleEv
+    }
+
+    Battle2DManager {
+        0x11328 : sys2d::Sprite3d BattlePause;
+
+        enum WIDGET_CTRL_TYPE u32 {
+            Pause: 0;
+        }
+
+        bool ctrlWidgetCheck(this, WIDGET_CTRL_TYPE type); -> _ZN3btl15Battle2DManager15ctrlWidgetCheckENS0_16WIDGET_CTRL_TYPEE
+
+        this instance_; -> _ZN3btl15Battle2DManager9instance_E
+    }
+
+    BattleCommandSelector {
+        u32 commandAction(this, btl::BattleSystem& system, s32, common::ABILITY_ID abilityId, s8); -> _ZN3btl21BattleCommandSelector13commandActionERNS_12BattleSystemEN6common10ABILITY_IDEc
+        void initialize(this, btl::BattleSystem& system, btl::BattlePlayer* player); -> _ZN3btl21BattleCommandSelector10initializeERNS_12BattleSystemEPNS_12BattlePlayerE
+    }
+
+    BattleDebugParameter {
+        bool flag(this, DEBUG_FLAG flag); -> _ZN3btl20BattleDebugParameter4flagENS_10DEBUG_FLAGE
+    }
+
+    BattleMonsterParty {
+        u32 giftExp(this); -> _ZN3btl18BattleMonsterParty7giftExpEv
+        u32 giftGold(this); -> _ZN3btl18BattleMonsterParty8giftGoldEv
+    }
+
+    BattlePart {
+        0x24 : bool IsPaused;
+        0x25 : bool ShouldPause;
+
+        void doInitialize(this); -> _ZN3btl10BattlePart12doInitializeEv
+
+        this instance_; -> _ZN3btl10BattlePart9instance_E
+    }
+
+    BattlePlayer {
+        s32 playerId(this); -> _ZN3btl12BattlePlayer8playerIdEv
+    }
+
+    BattleSystem {}
+
+    BattleWin {
+        bool possessGoldPhase(btl::BattleSystem& system); -> _ZN3btl9BattleWin16possessGoldPhaseERNS_12BattleSystemE
+    }
+
+    CBattleDisplay {
+        0x1b8 : s32 ShakeTimer;
+        0x1d8 : u32 ShakeAmplitudeX;
+        0x1dc : u32 ShakeAmplitudeY;
+        0x1e0 : u32 ShakeAmplitudeZ;
+
+        bool doShakeCamera(this); -> _ZN3btl14CBattleDisplay13doShakeCameraEv
+    }
+}
+
+CCharacterMng {
+    0x1cf0 : CTextureDataMng CTextureDataMng;
+
+    c8* getCharacterName(this, s32 cid); -> _ZN13CCharacterMng16getCharacterNameEi
+    s32 getIndexOfSearchingCharacter(this); -> _ZN13CCharacterMng28getIndexOfSearchingCharacterEv
+    void setFrameRate(this, fx32 framerate); -> _ZN13CCharacterMng12setFrameRateEi
+    void setHidden(this, s32 cid, bool hidden); -> _ZN13CCharacterMng9setHiddenEib
+    void setPause(this, s32, bool, ds::sys3d::CAnimSet::enTYPE type); -> _ZN13CCharacterMng8setPauseEibN2ds5sys3d8CAnimSet6enTYPEE
+    void setPosition(this, s32 cid, const VecFx32& position); -> _ZN13CCharacterMng11setPositionEiRK7VecFx32
+    void setRotation(this, s32 cid, u16 x, u16 y, u16 z); -> _ZN13CCharacterMng11setRotationEittt
+    void setShadowAlphaRate(this, s32 cid, s32 rate); -> _ZN13CCharacterMng18setShadowAlphaRateEii
+    void setShadowEnable(this, s32 cid, bool enabled); -> _ZN13CCharacterMng15setShadowEnableEib
+    void setShadowType(this, s32 cid, s32 type); -> _ZN13CCharacterMng13setShadowTypeEii
+    void setTransparencyRate(this, s32 cid, s32 rate); -> _ZN13CCharacterMng19setTransparencyRateEii
+    void startMotion(this, s32 cid, s32, bool, u32); -> _ZN13CCharacterMng11startMotionEiibj
+}
+
+common {
+    enum ABILITY_ID s8 {}
+
+    struct BabilMagicParameter {}
+
+    // Effect-data table loaded from "efficacy.beld.lz". Built as 127 hash buckets
+    // (indexed by effectId & 0x7f), each a singly-linked list of HashNode entries
+    // chained through HashNode::m_Next. m_Status: bit 0 = initialized, bit 1 = .beld loaded.
+    EfficacyDataConvection {
+        // 0x00 - bit 0: initialized; bit 1: .beld loaded
+        0x00 : u16 Status;
+        // 0x08 - owned (ds::CHeap::alloc_app / free_app)
+        0x08 : void* RawData;
+        // 0x10 - owned (malloc_count); array of 0x10-byte nodes
+        0x10 : HashNode* EffectData;
+        // 0x18 - owned (malloc_count); 127-entry bucket head array
+        0x18 : HashNode** HashTable;
+
+        void Ctor(this); -> _ZN6common22EfficacyDataConvectionC2Ev
+        // empty; real cleanup is in terminate()
+        void Dtor(this); -> _ZN6common22EfficacyDataConvectionD2Ev
+        // ignores self; reads global instance_
+        s32* getEfficacyData(this, s32 effectId); -> _ZN6common22EfficacyDataConvection15getEfficacyDataEi
+        // m_Status |= 1
+        void initialize(this); -> _ZN6common22EfficacyDataConvection10initializeEv
+        // panics on bad magic ('BELD' = 0x444c4542) or wrong state
+        void loadBELD(this); -> _ZN6common22EfficacyDataConvection8loadBELDEv
+        // unloadBELD + clears m_Status
+        void terminate(this); -> _ZN6common22EfficacyDataConvection9terminateEv
+        // frees m_HashTable, m_EffectData, m_RawData; leaves m_Status
+        void unloadBELD(this); -> _ZN6common22EfficacyDataConvection10unloadBELDEv
+
+        this instance_; -> _ZN6common22EfficacyDataConvection9instance_E
+
+        // 16-byte hash-chain node stored in m_EffectData. m_Data points into m_RawData
+        // at an EffectData record whose first 4 bytes are s32 m_EffectId; the rest of
+        // that record is type-specific (parsed at load time from per-type cumulative
+        // offsets in the BELD header).
+        HashNode[0x10] {
+            // -> EffectData record in m_RawData
+            0x0 : void* Data;
+            // next node in bucket, or NULL
+            0x8 : void* Next;
+        }
+    }
+}
+
+CTextureDataMng {
+    // [0..35] usable, [36] sentinel
+    0x0    : Slot[37] Slots;
+    0x14d0 : s32 TotalBytesCounter;
+
+    void delData(this, s32 index); -> _ZN15CTextureDataMng7delDataEi
+    void end(this); -> _ZN15CTextureDataMng3endEv
+    ds::sys3d::CModelTexture* getTex(this, s32 index); -> _ZN15CTextureDataMng6getTexEi
+    void init(this); -> _ZN15CTextureDataMng4initEv
+    void initValue(this, s32 index); -> _ZN15CTextureDataMng9initValueEi
+    bool releaseLnkTexVram(this, s32 index); -> _ZN15CTextureDataMng17releaseLnkTexVramEi
+    s32 searchDataIndex(this, const c8* name); -> _ZN15CTextureDataMng15searchDataIndexEPKc
+    s32 searchNullIndex(this); -> _ZN15CTextureDataMng15searchNullIndexEv
+    s32 setData(this, const c8* name, bool async); -> _ZN15CTextureDataMng7setDataEPKcb
+    s32 setData2(this, const c8* name, const c8* alias, bool async); -> _ZN15CTextureDataMng8setData2EPKcS1_b
+    s32 setTextureData(this, const c8* name, bool async); -> _ZN15CTextureDataMng14setTextureDataEPKcb
+    bool setupLnkTexVram(this, s32 index, bool async); -> _ZN15CTextureDataMng15setupLnkTexVramEib
+    bool useTexture(this, s32 index); -> _ZN15CTextureDataMng10useTextureEi
+
+    Slot[0x90] {
+        0x00 : u8 Setup;
+        0x01 : c8[24] Name;
+        0x1c : s32 RefCount;
+        0x48 : ds::sys3d::CModelTexture CModelTextures;
+    }
+}
+
+debug {
+    CharaViewerPart {
+        void doInitialize(this); -> _ZN5debug15CharaViewerPart12doInitializeEv
+    }
+}
+
+dgs {
+    struct DGSMSD {}
+
+    NNSG2dChar* DGSMsdGetString(u32 msd, s8 line, dgs::DGSMSD* dgsmsd); -> _ZN3dgs15DGSMsdGetStringEjhPNS_6DGSMSDE
+}
+
+ds {
+    CPad g_Pad; -> _ZN2ds5g_PadE
+
+    CPad {
+        u32 repeat(this); -> _ZN2ds4CPad6repeatEv
+    }
+
+    CVram {
+        0x18 : void* TexVramMng;
+        0x20 : void* PlttVramMng;
+
+        void releasePlttVramMng(this); -> _ZN2ds5CVram18releasePlttVramMngEv
+        void releaseTexVramMng(this); -> _ZN2ds5CVram17releaseTexVramMngEv
+        void setupPlttVramMng(this, u32, u32, s8); -> _ZN2ds5CVram16setupPlttVramMngEjjc
+        void setupTexVramMng(this, u32, u32, u32, s8); -> _ZN2ds5CVram15setupTexVramMngEjjjc
+
+        this m_instance; -> _ZN2ds5CVram10m_instanceE
+    }
+
+    snd {
+        struct DSSoundDesc {}
+
+        void dssndInitialize(const ds::snd::DSSoundDesc* desc); -> _ZN2ds3snd15dssndInitializeEPKNS0_11DSSoundDescE
+        void dssndUnloadBGM1(); -> _ZN2ds3snd14dssndUnloadBGMEv
+        void dssndUnloadBGM2(s32); -> _ZN2ds3snd14dssndUnloadBGMEi
+        void dssndUnloadBGMAll(); -> _ZN2ds3snd17dssndUnloadBGMAllEv
+        void dssndUnloadSE1(); -> _ZN2ds3snd13dssndUnloadSEEv
+        void dssndUnloadSE2(s32); -> _ZN2ds3snd13dssndUnloadSEEi
+        void dssndUnloadSEAll(); -> _ZN2ds3snd16dssndUnloadSEAllEv
+        void dssndUpdate(); -> _ZN2ds3snd11dssndUpdateEv
+
+        DSSoundHeap g_SoundHeapBGM; -> _ZN2ds3snd14g_SoundHeapBGME
+        DSSoundHeap g_SoundHeapSE; -> _ZN2ds3snd13g_SoundHeapSEE
+
+        BGMHandle {
+            0x0 : void* NNSSndHandle;
+            0x8 : bool pausing;
+            0xc : s32 seqNo;
+
+            void Ctor(this); -> _ZN2ds3snd9BGMHandleC1Ev
+            void Dtor(this); -> _ZN2ds3snd9BGMHandleD1Ev
+            void forceReleaseSequence(this); -> _ZN2ds3snd9BGMHandle20forceReleaseSequenceEv
+            bool getBGMEnable(); -> _ZN2ds3snd9BGMHandle12setBGMEnableEv
+            bool IsPlaying(this); -> _ZN2ds3snd9BGMHandle9IsPlayingEv
+            void MoveVolume(this, s32 targetVolume, s32 frames); -> _ZN2ds3snd9BGMHandle10MoveVolumeEii
+            void Pause(this, bool pause); -> _ZN2ds3snd9BGMHandle5PauseEc
+            void Play(this, s32 playerNo, s32 bankNo, s32 playerPrio, s32 seqNo); -> _ZN2ds3snd9BGMHandle4PlayEiiii
+            void PlayV(this, const s32& args); -> _ZN2ds3snd9BGMHandle4PlayERKi
+            s32 seqNo(this); -> _ZN2ds3snd9BGMHandle5seqNoEv
+            void setBGMEnable(bool enable); -> _ZN2ds3snd9BGMHandle12setBGMEnableEb
+            void setTempo(this, s32 ratio); -> _ZN2ds3snd9BGMHandle8setTempoEi
+            void SetVolume(this, s32 volume); -> _ZN2ds3snd9BGMHandle9SetVolumeEi
+            void Stop(this, s32 fadeFrame); -> _ZN2ds3snd9BGMHandle4StopEi
+        }
+
+        DSSoundHeap {
+            void dsshFinalize(this); -> _ZN2ds3snd11DSSoundHeap12dsshFinalizeEv
+        }
+
+        SEHandle {
+            0x0 : void* NNSSndHandle;
+
+            void Ctor(this); -> _ZN2ds3snd8SEHandleC1Ev
+            void Dtor(this); -> _ZN2ds3snd8SEHandleD1Ev
+            bool IsPlaying(this); -> _ZN2ds3snd8SEHandle9IsPlayingEv
+            void MoveVolume(this, s32 targetVolume, s32 frames); -> _ZN2ds3snd8SEHandle9setVolumeEii
+            void Play(this, s32 seqArcNo, s32 index, s32 volume, s32 pan); -> _ZN2ds3snd8SEHandle4PlayEiiii
+            void PlayFadeIn(this, s32 seqArcNo, s32 index, s32 fadeFrames, s32 volume, s32 pan); -> _ZN2ds3snd8SEHandle10PlayFadeInEiiiii
+            void setPan(this, u16 trackBitMask, s32 pan); -> _ZN2ds3snd8SEHandle6setPanEti
+            void setPanRange(this, u16 trackBitMask, s32 panRange); -> _ZN2ds3snd8SEHandle11setPanRangeEti
+            void setPitch(this, u16 trackBitMask, s32 pitch); -> _ZN2ds3snd8SEHandle8setPitchEti
+            void setTempo(this, s32 ratio); -> _ZN2ds3snd8SEHandle8setTempoEi
+            void setVolume(this, s32 volume); -> _ZN2ds3snd8SEHandle9setVolumeEi
+            void stop(this, s32 fadeFrame); -> _ZN2ds3snd8SEHandle4stopEi
+        }
+    }
+
+    sys3d {
+        CAnimation {
+            0x20 : fx32 Framerate;
+
+            void ctor(this); -> _ZN2ds5sys3d10CAnimationC1Ev
+            fx32 getFrameRate(this); -> _ZN2ds5sys3d10CAnimation12getFrameRateEv
+            void setFrameRate(this, fx32 framerate); -> _ZN2ds5sys3d10CAnimation12setFrameRateEi
+            void setup(this, void*, void*, u32, void*); -> _ZN2ds5sys3d10CAnimation5setupEPvS2_jS2_
+        }
+
+        CAnimSet {
+            enum enTYPE u32 {}
+        }
+
+        CCamera {
+            void setFOV(this, s32, s32); -> _ZN2ds5sys3d7CCamera6setFOVEii
+        }
+
+        CModelTexture[0x48] {
+            0x00 : void* Vtable;
+            0x08 : void* VtableHandler;
+            0x10 : u32 TexRequiredSize;
+            0x14 : u32 Tex4x4RequiredSize;
+            0x18 : u32 PlttRequiredSize;
+            0x20 : NNSG3dResFileHeader* RawData;
+            0x28 : u32 TexKey;
+            0x2c : u32 Tex4x4Key;
+            0x30 : u32 PlttKey;
+            0x38 : NNSG3dResTex* ResTex;
+            0x40 : u32 Flags;
+
+            void bindMdl(this, NNSG3dResMdl* mdl); -> _ZN2ds5sys3d13CModelTexture7bindMdlEP12NNSG3dResMdl
+            void bindMdlSet(this, NNSG3dResMdlSet* mdlSet); -> _ZN2ds5sys3d13CModelTexture10bindMdlSetEP15NNSG3dResMdlSet
+            void bindMdlToPltt(this, NNSG3dResMdl* mdl); -> _ZN2ds5sys3d13CModelTexture13bindMdlToPlttEP12NNSG3dResMdl
+            void bindMdlToPlttByName(this, NNSG3dResMdl* mdl, const c8* name); -> _ZN2ds5sys3d13CModelTexture19bindMdlToPlttByNameEP12NNSG3dResMdlPKc
+            void bindMdlToTex(this, NNSG3dResMdl* mdl); -> _ZN2ds5sys3d13CModelTexture12bindMdlToTexEP12NNSG3dResMdl
+            void bindMdlToTexByName(this, NNSG3dResMdl* mdl, const c8* name); -> _ZN2ds5sys3d13CModelTexture18bindMdlToTexByNameEP12NNSG3dResMdlPKc
+            void bindTexPlt(this); -> _ZN2ds5sys3d13CModelTexture10bindTexPltEv
+            void cleanup(this); -> _ZN2ds5sys3d13CModelTexture7cleanupEv
+            void clearValue(this); -> _ZN2ds5sys3d13CModelTexture10clearValueEv
+            void Ctor(this); -> _ZN2ds5sys3d13CModelTextureC1Ev
+            void Dtor(this); -> _ZN2ds5sys3d13CModelTextureD1Ev
+            u8 isModelTexture(NNSG3dResFileHeader* rawData); -> _ZN2ds5sys3d13CModelTexture14isModelTextureEPv
+            void releaseMdl(this, NNSG3dResMdl* mdl); -> _ZN2ds5sys3d13CModelTexture10releaseMdlEP12NNSG3dResMdl
+            void releaseMdlSet(this, NNSG3dResMdlSet* mdlSet); -> _ZN2ds5sys3d13CModelTexture13releaseMdlSetEP15NNSG3dResMdlSet
+            void releaseMdlToPltt(this, NNSG3dResMdl* mdl); -> _ZN2ds5sys3d13CModelTexture16releaseMdlToPlttEP12NNSG3dResMdl
+            void releaseMdlToPlttByName(this, NNSG3dResMdl* mdl, const c8* name); -> _ZN2ds5sys3d13CModelTexture22releaseMdlToPlttByNameEP12NNSG3dResMdlPKc
+            void releaseMdlToTex(this, NNSG3dResMdl* mdl); -> _ZN2ds5sys3d13CModelTexture15releaseMdlToTexEP12NNSG3dResMdl
+            void releaseMdlToTexByName(this, NNSG3dResMdl* mdl, const c8* name); -> _ZN2ds5sys3d13CModelTexture21releaseMdlToTexByNameEP12NNSG3dResMdlPKc
+            void releaseResource(this); -> _ZN2ds5sys3d13CModelTexture15releaseResourceEv
+            u8 reqReleaseResource(this); -> _ZN2ds5sys3d13CModelTexture18reqReleaseResourceEv
+            void setup(this, NNSG3dResFileHeader* rawData, bool async); -> _ZN2ds5sys3d13CModelTexture5setupEPvb
+            void tdlhCompletion(this, s32 status); -> _ZN2ds5sys3d13CModelTexture14tdlhCompletionEi
+        }
+
+        CMotSet {
+            fx32 getFrameRate(this); -> _ZN2ds5sys3d7CMotSet12getFrameRateEv
+            void setFrameRate(this, fx32 framerate); -> _ZN2ds5sys3d7CMotSet12setFrameRateEi
+        }
+    }
+}
+
+egs {
+    void GilbartInitialize(bool, bool isDoubleVoice); -> _ZN3egs17GilbartInitializeEbb
+    bool GilbartIsEndOfPlayVoice(s32 index); -> _ZN3egs23GilbartIsEndOfPlayVoiceEi
+    bool GilbartIsPlaying(s32 index); -> _ZN3egs16GilbartIsPlayingEi
+    void GilbartPauseVoice(s32 index, bool pause); -> _ZN3egs17GilbartPauseVoiceEib
+    void GilbartPlayVoice(const c8* file, s32 index); -> _ZN3egs16GilbartPlayVoiceEPKci
+    void GilbartProcess(void*); -> _ZN3egs14GilbartProcessEPv
+    void GilbartSetVolume(s32 index, float volume); -> _ZN3egs16GilbartSetVolumeEif
+    s32 GilbartStatus(s32 index); -> _ZN3egs13GilbartStatusEi
+    void GilbartStopVoice(s32 index); -> _ZN3egs16GilbartStopVoiceEi
+    void GilbartTerminate(); -> _ZN3egs16GilbartTerminateEv
+}
+
+evt {
+    EventCamera {
+        void startCameraMotion(this, u32, u32, u32, bool); -> _ZN3evt11EventCamera17startCameraMotionEjjjb
+    }
+}
+
+FlagManager[0xbb8] {
+    0x0 : u8[3][1000] Banks;
+
+    void Ctor(this); -> _ZN11FlagManagerC1Ev
+    void Dtor(this); -> _ZN11FlagManagerD1Ev
+    bool get(this, u32 bank, u32 offset); -> _ZN11FlagManager3getEjj
+    void reset(this, u32 bank, u32 offset); -> _ZN11FlagManager5resetEjj
+    void reverse(this, u32 bank, u32 offset); -> _ZN11FlagManager7reverseEjj
+    void set(this, u32 bank, u32 offset); -> _ZN11FlagManager3setEjj
+    this* singleton(); -> _ZN11FlagManager9singletonEv
+
+    this _instance; -> _ZN11FlagManager9_instanceE
+}
+
+Font {
+    0x0  : GLuint* textures;
+    0x18 : void* buf;
+
+    void initFont(this); -> _ZN4Font8initFontEv
+}
+
+itm {
+    enum WEAPON_SYSTEM {}
+
+    struct WeaponParameter {}
+
+    struct ProtectionParameter {}
+
+    EquipParameter {
+        bool canEquip(this, pl::PLAYER_TYPES); -> _ZN3itm14EquipParameter8canEquipEN2pl12PLAYER_TYPESE
+    }
+
+    // 4-category item static-data tables, loaded from "item_parameter.pak.lz".
+    // All lookups are linear scans matching entry+0x02 (s16 item id).
+    ItemManager {
+        0x00 : s32 ConsumptionCount;
+        0x04 : s32 WeaponCount;
+        0x08 : s32 ProtectionCount;
+        0x0c : s32 ImportantCount;
+        // owned, freed by free()
+        0x10 : void* RawData;
+        // chain 0, stride 0x30
+        0x18 : void* Consumption;
+        // chain 1, stride 0x58
+        0x20 : void* Weapon;
+        // chain 2, stride 0x54
+        0x28 : void* Protection;
+        // chain 3, stride 0x20
+        0x30 : void* Important;
+
+        void* consumptionParameter(this, s16 itemId); -> _ZN3itm11ItemManager20consumptionParameterEs
+        // weapon ∪ protection
+        void* equipParameter(this, s16 itemId); -> _ZN3itm11ItemManager14equipParameterEs
+        void free(this); -> _ZN3itm11ItemManager4freeEv
+        void* importantParameter(this, s16 itemId); -> _ZN3itm11ItemManager18importantParameterEs
+        // 0..3 or -1
+        s32 itemCategory(this, s16 itemId); -> _ZN3itm11ItemManager12itemCategoryEs
+        // all 4 tables in order
+        void* itemParameter(this, s16 itemId); -> _ZN3itm11ItemManager13itemParameterEs
+        // panics if total ≥ 0x180 or important ≥ 0x80
+        u8 load(this); -> _ZN3itm11ItemManager4loadEv
+        void* protectionParameter(this, s16 itemId); -> _ZN3itm11ItemManager19protectionParameterEs
+        void* weaponParameter(this, s16 itemId); -> _ZN3itm11ItemManager15weaponParameterEs
+
+        this instance_; -> _ZN3itm11ItemManager9instance_E
+    }
+
+    // Party inventory. Two fixed-capacity arrays of 4-byte slots with separate
+    // live counts. Capacity bounds (0x180 / 0x80) are enforced by storeItem /
+    // storeImportantItem which panic with "vector size over." on overflow.
+    // resetItemId / resetImportantItemId prune entries whose ids no longer
+    // exist in itm::ItemManager (linear scan of all 4 ItemManager tables).
+    PossessionItemManager[0x808] {
+        // up to 384 normal items
+        0x0   : Entry[0x180] NormalItems;
+        // live count (low 16 bits used)
+        0x600 : s32 NormalCount;
+        // up to 128 important items
+        0x604 : Entry[0x80] ImportantItems;
+        // live count (low 16 bits used)
+        0x804 : s32 ImportantCount;
+
+        // m_ImportantCount = 0
+        void eraseAllImportantItem(this); -> _ZN3itm21PossessionItemManager21eraseAllImportantItemEv
+        // m_NormalCount = 0
+        void eraseAllNormalItem(this); -> _ZN3itm21PossessionItemManager18eraseAllNormalItemEv
+        // important if ItemManager cat byte == 0x1c
+        void eraseItem(this, s16 itemId, s32 count); -> _ZN3itm21PossessionItemManager9eraseItemEsi
+        // panics if index >= m_ImportantCount
+        Entry* importantItem(this, s32 index); -> _ZN3itm21PossessionItemManager13importantItemEi
+        s32 importantItemNum(this); -> _ZN3itm21PossessionItemManager16importantItemNumEv
+        // zeroes both counts
+        void initialize(this); -> _ZN3itm21PossessionItemManager10initializeEv
+        // m_NormalCount + m_ImportantCount
+        s32 itemAllNum(this); -> _ZN3itm21PossessionItemManager10itemAllNumEv
+        // panics if index >= m_NormalCount
+        Entry* normalItem(this, s32 index); -> _ZN3itm21PossessionItemManager10normalItemEi
+        s32 normalItemNum(this); -> _ZN3itm21PossessionItemManager13normalItemNumEv
+        // merges m_ReservedCount into m_Count
+        void reserveCancel(this); -> _ZN3itm21PossessionItemManager13reserveCancelEv
+        // prunes stale ids from m_ImportantItems
+        void resetImportantItemId(this); -> _ZN3itm21PossessionItemManager20resetImportantItemIdEv
+        // prunes stale ids from m_NormalItems
+        void resetItemId(this); -> _ZN3itm21PossessionItemManager11resetItemIdEv
+        // nullptr if not found
+        Entry* searchImportantItem(this, s16 itemId); -> _ZN3itm21PossessionItemManager19searchImportantItemEs
+        // nullptr if not found
+        Entry* searchNormalItem(this, s16 itemId); -> _ZN3itm21PossessionItemManager16searchNormalItemEs
+        // merges or appends; panics if >= 0x80
+        void storeImportantItem(this, s16 itemId, s32 count); -> _ZN3itm21PossessionItemManager18storeImportantItemEsi
+        // merges or appends; panics if >= 0x180
+        void storeItem(this, s16 itemId, s32 count); -> _ZN3itm21PossessionItemManager9storeItemEsi
+        // swaps two normal-item slots
+        void swapItem(this, s16 itemId1, s16 itemId2); -> _ZN3itm21PossessionItemManager8swapItemEss
+
+        // 4-byte inventory slot. Written as a single u32 by storeItem/storeImportantItem
+        // (itemId | count<<16). Counts are clamped to [0, 99]. m_ReservedCount is set
+        // by an external "reserve" routine and merged back into m_Count (capped at 99)
+        // by reserveCancel(), which then zeroes m_ReservedCount.
+        Entry[0x4] {
+            0x0 : s16 ItemId;
+            // live stack size, clamped to [0, 99]
+            0x2 : u8 Count;
+            // pending reservation, cleared by reserveCancel()
+            0x3 : u8 ReservedCount;
+        }
+    }
+}
+
+map2d {
+    c8* NAVI_MAP_TASK_NAME; -> _ZN5map2d18NAVI_MAP_TASK_NAMEE
+
+    NaviMap {
+        void MapOff(void* self); -> _ZN5map2d7NaviMap6MapOffEv
+        void MapOn(void* self); -> _ZN5map2d7NaviMap5MapOnEv
+        void NaviMapDrawOff(void* self); -> _ZN5map2d7NaviMap14NaviMapDrawOffEv
+        void setAlpha(void* self, u32 alpha); -> _ZN5map2d7NaviMap8setAlphaEi
+    }
+}
+
+menu {
+    void playSECommon(s32 seqArcNo, s32 index); -> _ZN4menu12playSECommonEii
+}
+
+mon {
+    // Owner of all monster static-data tables. load() decompresses "monster.chaindata.lz"
+    // and carves it into 11 sub-tables via pack::ChainPointer. Counts are stored in
+    // chain-index order; data pointers follow the original struct field order. Chain 3
+    // is unused (count slot at +0x7c stays 0, no data pointer carved).
+    MonsterManager[0x90] {
+        // owned, freed by free()
+        0x00 : void* RawData;
+        // chain 0,  stride 0x98, id at +0x08 (s16)
+        0x08 : void* MonsterParameter;
+        // chain 1,  stride 0x0a, id at +0x00 (s16)
+        0x10 : void* DropItem;
+        // chain 2,  stride 0x1c, indexed (not id-keyed)
+        0x18 : void* NormalAttack;
+        // chain 4,  stride 0x54, id at +0x00 (s16)
+        0x20 : void* Offset;
+        // chain 5,  stride 0x44, id at +0x00 (s16)
+        0x28 : void* EffectsInfoAlt;
+        // chain 11, stride 0x48, id at +0x00 (s16), sub at +0x44 (u16)
+        0x30 : void* EffectsInfo;
+        // chain 6,  stride 0x1c, id0 at +0x00 (u8), id1 at +0x01 (u8)
+        0x38 : void* OctmanmosLegInfo;
+        // chain 8,  stride 0x2c, id at +0x00 (s16)
+        0x40 : void* TurnAction;
+        // chain 9,  stride 0x0c, id at +0x00 (s16)
+        0x48 : void* ActionCondition;
+        // chain 10, stride 0x0e, id at +0x00 (s16)
+        0x50 : void* Counter;
+        // chain 7,  stride 0x16, id at +0x00 (s16)
+        0x58 : void* Ai;
+        0x60 : u32 TurnActionCount;
+        0x64 : u32 ActionConditionCount;
+        0x68 : u32 CounterCount;
+        0x6c : u32 AiCount;
+        0x70 : u32 MonsterParameterCount;
+        0x74 : u32 DropItemCount;
+        0x78 : u32 NormalAttackCount;
+        // chain 3 (unused)
+        0x80 : u32 OffsetCount;
+        0x84 : u32 EffectsInfoAltCount;
+        0x88 : u32 EffectsInfoCount;
+        0x8c : u32 OctmanmosLegInfoCount;
+
+        // self ignored
+        void acceptMonsterManiaData(this, mon::MonsterManiaManager& src); -> _ZN3mon14MonsterManager22acceptMonsterManiaDataERNS_19MonsterManiaManagerE
+        // panics if id < 0
+        s16* actionCondition(this, s32 id); -> _ZN3mon14MonsterManager15actionConditionEi
+        // panics if id < 0
+        s16* ai(this, s32 id); -> _ZN3mon14MonsterManager2aiEi
+        // panics if id < 0
+        s16* counter(this, s32 id); -> _ZN3mon14MonsterManager7counterEi
+        s16* dropItem(this, s32 itemId); -> _ZN3mon14MonsterManager8dropItemEi
+        // primary then alt table
+        s16* effectsInfo(this, common::ABILITY_ID abilityId, s16 subId); -> _ZN3mon14MonsterManager11effectsInfoEN6common10ABILITY_IDEs
+        void free(this); -> _ZN3mon14MonsterManager4freeEv
+        // "monster.chaindata.lz"
+        u8 load(this); -> _ZN3mon14MonsterManager4loadEv
+        MonsterManiaManager* monsterManiaManager(); -> _ZN3mon14MonsterManager19monsterManiaManagerEv
+        void* monsterParameter(this, s32 monsterId); -> _ZN3mon14MonsterManager16monsterParameterEi
+        void* normalAttack(this, s32 index); -> _ZN3mon14MonsterManager12normalAttackEi
+        u8* octmanmosLegInfo(this, u8 legId, u8 partId); -> _ZN3mon14MonsterManager16octmanmosLegInfoEhh
+        s16* offset(this, s32 id); -> _ZN3mon14MonsterManager6offsetEi
+        // self ignored
+        void sendMonsterManiaData(this, mon::MonsterManiaManager& dest); -> _ZN3mon14MonsterManager20sendMonsterManiaDataERNS_19MonsterManiaManagerE
+        // stub
+        void setMonsterIdForMonsterManaia(); -> _ZN3mon14MonsterManager28setMonsterIdForMonsterManaiaEv
+        // panics if id < 0
+        s16* turnAction(this, s32 id); -> _ZN3mon14MonsterManager10turnActionEi
+
+        this instance_; -> _ZN3mon14MonsterManager9instance_E
+    }
+
+    // 0x200-byte flat array of MonsterMania, indexed by monster id (0..0xff). The on*()
+    // functions fan out updates to all members of a monster family — e.g. onEncount(0x60)
+    // marks slots 0x60, 0xe4..0xe9.
+    MonsterManiaManager[0x200] {
+        0x0 : MonsterMania[0x100] Entries;
+
+        void clearMonsterMania(this); -> _ZN3mon19MonsterManiaManager17clearMonsterManiaEv
+        // +0x10 per call, capped at 999
+        void kill(this, s16 monsterId); -> _ZN3mon19MonsterManiaManager4killEs
+        // panics if index >= 0x100
+        MonsterMania* monsterMania(this, s32 index); -> _ZN3mon19MonsterManiaManager12monsterManiaEi
+        void onEncount(this, s16 monsterId); -> _ZN3mon19MonsterManiaManager9onEncountEs
+        void onLibrary(this, s16 monsterId); -> _ZN3mon19MonsterManiaManager9onLibraryEs
+        // stub, always returns 1
+        u8 setMonsterManiaForMonsterID(MonsterMania& mania); -> _ZN3mon19MonsterManiaManager27setMonsterManiaForMonsterIDERNS_12MonsterManiaE
+    }
+}
+
+movie {
+    MoviePart {}
+}
+
+mr {
+    u32 getCompleteRate(); -> _ZN2mr15setCompleteRateEv
+
+    MonsterRefDataManager* MRDMng; -> _ZN2mr6MRDMngE
+
+    // Monster reference table loaded from "monster_refer.bbd.lz". Entries are 0x20 bytes
+    // with the monster id as the first s16 (entry+0x00). m_Count = ceil(rawSize / 0x20).
+    MonsterRefDataManager[0x10] {
+        // owned, freed by free()
+        0x0 : void* RawData;
+        0x8 : u32 Count;
+
+        // zeroes m_RawData only
+        void Ctor(this); -> _ZN2mr21MonsterRefDataManagerC1Ev
+        // empty
+        void Dtor(this); -> _ZN2mr21MonsterRefDataManagerD1Ev
+        // frees m_RawData, zeroes both fields
+        void free(this); -> _ZN2mr21MonsterRefDataManager4freeEv
+        // "monster_refer.bbd.lz"
+        void load(this); -> _ZN2mr21MonsterRefDataManager4loadEv
+        s16* monsterReference(this, s32 monsterId); -> _ZN2mr21MonsterRefDataManager16monsterReferenceEi
+        // nullptr if out of range
+        void* monsterReferenceFromIndex(this, s32 index); -> _ZN2mr21MonsterRefDataManager25monsterReferenceFromIndexEi
+    }
+}
+
+msg {
+    enum CANVAS u64 {}
+}
+
+object {
+    CharacterObject {
+        0x30  : VecFx32 position;
+        0x70  : s32 cid;
+        0x84  : s32 rotX;
+        0x88  : s32 rotY;
+        0x8c  : s32 rotZ;
+        0x218 : s32 cid2;
+    }
+}
+
+part {
+    enum GAMEPART u32 {
+        DebugPart: 0;
+        CompanyLogoPart: 1;
+        MoviePart: 2;
+        TitlePart: 3;
+        WorldPart: 6;
+        BattlePart: 8;
+        BackupRomFormatPart: 23;
+        SoundDebugPart: 32;
+        SoundPlayerPart: 33;
+    }
+
+    TitlePart {
+        0x10 : title::TitleSubState TitleSubState;
+    }
+
+    WorldPart {
+        0x440 : world::WorldStateContext WorldStateContext;
+
+        this wpInstance_; -> _ZN4part9WorldPart11wpInstance_E
+    }
+}
+
+pl {
+    enum PLAYER_TYPES s32 {}
+
+    enum PARTY_FORMATION_TYPES u8 {}
+
+    enum HAND_TYPE u8 {}
+
+    enum EQUIP_POINTS u8 {}
+
+    // Per-character learned-ability bit-flag manager. 6 categories map to ability-id
+    // ranges (learn/isLearning/forget/learnForDebug dispatch on the id):
+    // type 0: 0x000..0x5db    type 1: 0x5dc..0xf9f    type 2: 0xfa0..0x1193
+    // type 3: 0x1194..0x12bf  type 4: 0x12c0..0x1323  type 5: 0x1324..0x1333
+    // learn()/learnForDebug() also enforce a 3-magic-types cap for ids in
+    // {0x5, 0x6, 0xd, 0x12, 0x53} (the 0x42060 bitmask + explicit 0x53 check),
+    // checked via learningMagicTypesNumber().
+    LearningAbilityManager[0x30] {
+        // per-category bit-array pointers into Contents
+        // [0]→+0x00 (32B) [1]→+0x20 (4B) [2]→+0x24 (5B)
+        // [3]→+0x29 (5B)  [4]→+0x2e (2B) [5]→+0x30 (2B)
+        0x0 : u8*[6] Flags;
+
+        enum LEARNING_ABILITY_TYPES u32 {}
+
+        void clear(this, LEARNING_ABILITY_TYPES type); -> _ZN2pl22LearningAbilityManager5clearENS0_22LEARNING_ABILITY_TYPESE
+        void forget(this, common::ABILITY_ID abilityId); -> _ZN2pl22LearningAbilityManager6forgetEN6common10ABILITY_IDE
+        // setContents + zero
+        void initialize(this, LearningAbilityManagerContents& contents); -> _ZN2pl22LearningAbilityManager10initializeERNS_30LearningAbilityManagerContentsE
+        u8 isLearning(this, common::ABILITY_ID abilityId); -> _ZN2pl22LearningAbilityManager10isLearningEN6common10ABILITY_IDE
+        bool isMagicTypesAbility(this, common::ABILITY_ID abilityId); -> _ZN2pl22LearningAbilityManager19isMagicTypesAbilityEN6common10ABILITY_IDE
+        u8 isOn(this, LEARNING_ABILITY_TYPES type, s32 flagIndex); -> _ZN2pl22LearningAbilityManager4isOnENS0_22LEARNING_ABILITY_TYPESEi
+        // checks AbilityManager + 3-magic cap
+        void learn(this, common::ABILITY_ID abilityId); -> _ZN2pl22LearningAbilityManager5learnEN6common10ABILITY_IDE
+        // skips isEnableLearn
+        void learnForDebug(this, common::ABILITY_ID abilityId); -> _ZN2pl22LearningAbilityManager13learnForDebugEN6common10ABILITY_IDE
+        // 0..5; counts bits in cat-0 array
+        s8 learningMagicTypesNumber(this); -> _ZN2pl22LearningAbilityManager24learningMagicTypesNumberEv
+        void off(this, LEARNING_ABILITY_TYPES type, s32 flagIndex); -> _ZN2pl22LearningAbilityManager3offENS0_22LEARNING_ABILITY_TYPESEi
+        void on(this, LEARNING_ABILITY_TYPES type, s32 flagIndex); -> _ZN2pl22LearningAbilityManager2onENS0_22LEARNING_ABILITY_TYPESEi
+        void setContents(this, LearningAbilityManagerContents& contents); -> _ZN2pl22LearningAbilityManager11setContentsERNS_30LearningAbilityManagerContentsE
+
+        u32* ARRAY_SIZE; -> _ZN2pl22LearningAbilityManager10ARRAY_SIZEE
+        u32* FLAG_OFFSET; -> _ZN2pl22LearningAbilityManager11FLAG_OFFSETE
+        // Per-category sizes/offsets (FLAG_OFFSET is referenced by asm but not by any
+        // dumped function's pseudocode).
+        u32* FLAG_SIZE; -> _ZN2pl22LearningAbilityManager9FLAG_SIZEE
+    }
+
+    // 0x32-byte bit-flag storage backing LearningAbilityManager. Layout matches the
+    // 6 m_Flags[i] pointers LearningAbilityManager stores (offsets 0x00, 0x20, 0x24,
+    // 0x29, 0x2e, 0x30 with sizes 32/4/5/5/2/2). Each sub-array partitions the global
+    // common::ABILITY_ID space:
+    // [0]→0x000..0x5db  [1]→0x5dc..0xf9f  [2]→0xfa0..0x1193
+    // [3]→0x1194..0x12bf  [4]→0x12c0..0x1323  [5]→0x1324..0x1333
+    LearningAbilityManagerContents[0x32] {
+        // 256 bits, includes the 5 magic-type ability bits
+        0x00 : u8[0x20] FlagsType0;
+        // 32  bits
+        0x20 : u8[0x04] FlagsType1;
+        // 40  bits
+        0x24 : u8[0x05] FlagsType2;
+        // 40  bits
+        0x29 : u8[0x05] FlagsType3;
+        // 16  bits
+        0x2e : u8[0x02] FlagsType4;
+        // 16  bits
+        0x30 : u8[0x02] FlagsType5;
+    }
+
+    // Size 0x230 — confirmed by PlayerParty's 15-Player stride. Sub-object
+    // offsets verified against the ctor and `equipmentAttach(HAND_TYPE) =
+    // self + handType*0x1c + 0x1c8`.
+    Player[0x230] {
+        // slot active flag
+        0x0   : u8 Enabled;
+        // subobject; playerAbilityManager() returns &this
+        0x8   : u8[0x104] PlayerAbilityManager;
+        0x10c : PLAYER_TYPES PlayerType;
+        0x110 : ys::BodyParameter BodyParameter;
+        // PlayerEquipParameter; equipParameter() returns &this
+        0x118 : u8[0x8] PlayerEquipParameter;
+        // s16[5] of equipment ids
+        0x120 : s16* EquipmentItems;
+        // EquipmentMagicBinder subobject
+        0x128 : u8[0x50] EquipmentMagicBinder;
+        // subobject (setPhysicsAttack / updateParameter)
+        0x178 : u8[0x2c] PhysicsAttackParam;
+        // subobject (calcPhysicsDefense)
+        0x1a4 : u8[0x12] PhysicsDefenseParam;
+        // 5 clamped stat bytes (STR/AGI/VIT/LUCK/INT)
+        0x1b6 : u8[5] Stats;
+        0x1bc : s16 MagicDefense;
+        // magicDefensePower() returns (s32)this
+        0x1be : s16 MagicDefensePower;
+        // character id; -1 when unassigned
+        0x1c4 : s32 cid;
+        // PlayerEquipmentSymbol[HAND_TYPE]
+        0x1c8 : u8[2][0x1c] EquipmentSymbol;
+        // LearningAbilityManager; learningAbility() returns &this
+        0x200 : u8[0x30] LearningAbilityManager;
+
+        // 16-byte sret
+        void abilityBouns(this); -> _ZN2pl6Player12abilityBounsEv
+        // ys::BodyParameter&
+        void addEquipmentBonus(this, ys::BodyParameter& bodyParam, s32 arg); -> _ZN2pl6Player17addEquipmentBonusERN2ys13BodyParameterEi
+        // ys::MagicDefenseParameter&
+        void addMagicDefense(this, ys::MagicDefenseParameter& outParam, s32 arg); -> _ZN2pl6Player15addMagicDefenseERN2ys21MagicDefenseParameterEi
+        // ys::PhysicsDefenseParameter&
+        void addPhysicsDefense_ib(this, ys::PhysicsDefenseParameter& outParam, s32 arg, bool flag); -> _ZN2pl6Player17addPhysicsDefenseERN2ys23PhysicsDefenseParameterEib
+        // itm::ProtectionParameter*
+        void addPhysicsDefense_Pb(this, ys::PhysicsDefenseParameter& outParam, itm::ProtectionParameter* protectionParam, bool flag); -> _ZN2pl6Player17addPhysicsDefenseERN2ys23PhysicsDefenseParameterEPN3itm19ProtectionParameterEb
+        void adjustAbility(this); -> _ZN2pl6Player13adjustAbilityEv
+        void attachEquipmentSymbol(this, bool flag); -> _ZN2pl6Player21attachEquipmentSymbolEb
+        void attachEquipmentSymbolOne(this, HAND_TYPE hand, bool flag); -> _ZN2pl6Player24attachEquipmentSymbolOneENS_9HAND_TYPEEb
+        // -> saveParam+0x1b8
+        u8 avoidance(this); -> _ZN2pl6Player9avoidanceEv
+        // -> self+0x110 (ys::BodyParameter*)
+        void* bodyAndBonus(this); -> _ZN2pl6Player12bodyAndBonusEv
+        // Body parameter calculations
+        // ys::BodyParameter&
+        void bodyAndBonus_BP(this, ys::BodyParameter& bodyParam, s16, s16, s16, s16, s16); -> _ZN2pl6Player12bodyAndBonusERN2ys13BodyParameterEsssss
+        void calcBonus(this); -> _ZN2pl6Player9calcBonusEv
+        // static
+        s32 calcHpColor(s32 hp, s32 maxHp); -> _ZN2pl6Player11calcHpColorEii
+        void calcMagicDefense(this); -> _ZN2pl6Player16calcMagicDefenseEv
+        void calcPhysicsDefense(this); -> _ZN2pl6Player18calcPhysicsDefenseEv
+        // Equipment
+        bool canEquip(this, s16 itemId, HAND_TYPE hand); -> _ZN2pl6Player8canEquipEsNS_9HAND_TYPEE
+        bool canEquipArrow(this, s32 arg, itm::WeaponParameter* weaponParam); -> _ZN2pl6Player13canEquipArrowEiPN3itm15WeaponParameterE
+        bool canEquipBow(this, s32 arg, itm::WeaponParameter* weaponParam, bool flag); -> _ZN2pl6Player11canEquipBowEiPN3itm15WeaponParameterEb
+        bool canEquipHarp(this, s32 arg, itm::WeaponParameter* weaponParam, bool flag); -> _ZN2pl6Player12canEquipHarpEiPN3itm15WeaponParameterEb
+        // itm::WeaponParameter*
+        bool canEquipWeapon(this, s32 arg, itm::WeaponParameter* weaponParam); -> _ZN2pl6Player14canEquipWeaponEiPN3itm15WeaponParameterE
+        bool canGivenExp(this); -> _ZN2pl6Player11canGivenExpEv
+        bool canWinningDirection(this); -> _ZN2pl6Player19canWinningDirectionEv
+        void changeStonePalette(this, bool arg); -> _ZN2pl6Player18changeStonePaletteEb
+        void changeStonePaletteForEvent(this, bool arg); -> _ZN2pl6Player26changeStonePaletteForEventEb
+        s32 checkHpColor(this); -> _ZN2pl6Player12checkHpColorEv
+        void clearCommand(this); -> _ZN2pl6Player12clearCommandEv
+        // -> saveParam+0x1c
+        ys::Condition* condition(this); -> _ZN2pl6Player9conditionEv
+        // Lifecycle
+        void Ctor(this); -> _ZN2pl6PlayerC2Ev
+        // -> saveParam+1
+        void* decantLevel(this); -> _ZN2pl6Player11decantLevelEv
+        u16 defaultMaxHp(this); -> _ZN2pl6Player12defaultMaxHpEv
+        u16 defaultMaxMp(this); -> _ZN2pl6Player12defaultMaxMpEv
+        // -> saveParam+0x1b8
+        u8 deftness(this); -> _ZN2pl6Player8deftnessEv
+        s32 difference(this, s32 a, s32 b); -> _ZN2pl6Player10differenceEii
+        bool doEquip(this, s32 point, s16 itemId, bool flag); -> _ZN2pl6Player7doEquipEisb
+        void Dtor(this); -> _ZN2pl6PlayerD2Ev
+        // -> self + hand*0x1c + 0x1c8
+        void* equipmentAttach(this, HAND_TYPE hand); -> _ZN2pl6Player15equipmentAttachENS_9HAND_TYPEE
+        s32 equipmentBounsHP(this); -> _ZN2pl6Player16equipmentBounsHPEv
+        void equipmentSymbolVisibility(this, bool flag); -> _ZN2pl6Player25equipmentSymbolVisibilityEb
+        // 0x1c-byte sret
+        void equipMenuParameter(this, s16, s16, s16, s16, s16); -> _ZN2pl6Player18equipMenuParameterEsssss
+        // -> self+0x118
+        void* equipParameter(this); -> _ZN2pl6Player14equipParameterEv
+        void* exp(this); -> _ZN2pl6Player3expEv
+        void fine(this); -> _ZN2pl6Player4fineEv
+        void forgetAbility_AI(this, common::ABILITY_ID abilityId); -> _ZN2pl6Player13forgetAbilityEN6common10ABILITY_IDE
+        void forgetAbility_i(this, s32 arg); -> _ZN2pl6Player13forgetAbilityEi
+        void forgetAllAbilityForDebug(this); -> _ZN2pl6Player24forgetAllAbilityForDebugEv
+        void forgetAllBlackMagicForDebug(this); -> _ZN2pl6Player27forgetAllBlackMagicForDebugEv
+        void forgetAllNinjutsuForDebug(this); -> _ZN2pl6Player25forgetAllNinjutsuForDebugEv
+        void forgetAllSongForDebug(this); -> _ZN2pl6Player21forgetAllSongForDebugEv
+        void forgetAllSummonForDebug(this); -> _ZN2pl6Player23forgetAllSummonForDebugEv
+        void forgetAllWhiteMagicForDebug(this); -> _ZN2pl6Player27forgetAllWhiteMagicForDebugEv
+        void forgetLearnedMagicByEvent(this); -> _ZN2pl6Player25forgetLearnedMagicByEventEv
+        // Stat growth
+        void growParameter(this, u8 arg); -> _ZN2pl6Player13growParameterEh
+        // -> saveParam+0xc
+        void* hp(this); -> _ZN2pl6Player2hpEv
+        void initialize(this, PLAYER_TYPES id); -> _ZN2pl6Player10initializeENS_12PLAYER_TYPESE
+        void initializeCommand(this); -> _ZN2pl6Player17initializeCommandEv
+        void initializeDefaultCommand(this); -> _ZN2pl6Player24initializeDefaultCommandEv
+        void initializeName(this); -> _ZN2pl6Player14initializeNameEv
+        bool isCanEquipProtection(this, s32 arg, itm::ProtectionParameter* protectionParam); -> _ZN2pl6Player20isCanEquipProtectionEiPN3itm19ProtectionParameterE
+        // Command list
+        void isCommand(this, common::ABILITY_ID abilityId); -> _ZN2pl6Player9isCommandEN6common10ABILITY_IDE
+        bool isEquipable(this, EQUIP_POINTS point, s16 itemId); -> _ZN2pl6Player11isEquipableENS_12EQUIP_POINTSEs
+        bool isEquipedItemOnAllPoints(this, s16 itemId); -> _ZN2pl6Player24isEquipedItemOnAllPointsEs
+        bool isEquipedItemOnPoint(this, s32 point, s16 itemId); -> _ZN2pl6Player20isEquipedItemOnPointEis
+        // itm::EquipParameter*
+        bool isEquipItem(this, itm::EquipParameter* equipParam); -> _ZN2pl6Player11isEquipItemEPN3itm14EquipParameterE
+        void isEquipMetal(this); -> _ZN2pl6Player12isEquipMetalEv
+        void isEquippedBow(this); -> _ZN2pl6Player13isEquippedBowEv
+        u32 isFinishAttack(this); -> _ZN2pl6Player14isFinishAttackEv
+        bool isHand(this, s32 arg, bool flag); -> _ZN2pl6Player6isHandEib
+        bool isHandCheck(this, s32 arg, itm::WeaponParameter* weaponParam, itm::ProtectionParameter* protectionParam, bool flag1, bool flag2); -> _ZN2pl6Player11isHandCheckEiPN3itm15WeaponParameterEPNS1_19ProtectionParameterEbb
+        bool isHealing(this); -> _ZN2pl6Player9isHealingEv
+        void isKnowledgeInCommand(this); -> _ZN2pl6Player20isKnowledgeInCommandEv
+        void isUseMagic_AI(this, common::ABILITY_ID abilityId, s32 arg, bool flag); -> _ZN2pl6Player10isUseMagicEN6common10ABILITY_IDEib
+        bool isUseMagic_BM(this, common::BabilMagicParameter* magicParam, s32 arg, bool flag); -> _ZN2pl6Player10isUseMagicEPN6common19BabilMagicParameterEib
+        bool isUseMagicCharacter(this); -> _ZN2pl6Player19isUseMagicCharacterEv
+        void learnAbility_AI(this, common::ABILITY_ID abilityId); -> _ZN2pl6Player12learnAbilityEN6common10ABILITY_IDE
+        void learnAbility_ii(this, s32 arg1, s32 arg2); -> _ZN2pl6Player12learnAbilityEii
+        void learnAbilityForDebug(this, common::ABILITY_ID abilityId); -> _ZN2pl6Player20learnAbilityForDebugEN6common10ABILITY_IDE
+        void learnAllAbilityForDebug(this); -> _ZN2pl6Player23learnAllAbilityForDebugEv
+        void learnAllBlackMagicForDebug(this); -> _ZN2pl6Player26learnAllBlackMagicForDebugEv
+        void learnAllNinjutsuForDebug(this); -> _ZN2pl6Player24learnAllNinjutsuForDebugEv
+        void learnAllSongForDebug(this); -> _ZN2pl6Player20learnAllSongForDebugEv
+        void learnAllSummonForDebug(this); -> _ZN2pl6Player22learnAllSummonForDebugEv
+        void learnAllWhiteMagicForDebug(this); -> _ZN2pl6Player26learnAllWhiteMagicForDebugEv
+        // -> self+0x200
+        LearningAbilityManager* learningAbility(this); -> _ZN2pl6Player15learningAbilityEv
+        // -> saveParam+0
+        void* level(this); -> _ZN2pl6Player5levelEv
+        bool levelDown(this, s32 levels); -> _ZN2pl6Player9levelDownEi
+        u64 levelUp(this, s32 levels); -> _ZN2pl6Player7levelUpEi
+        void listupCommand(this, SummonAbilityList& list); -> _ZN2pl6Player13listupCommandERNS_17SummonAbilityListE
+        void listupCommandMagic(this, SummonAbilityList& list, SummonAbilityList::TYPES type); -> _ZN2pl6Player18listupCommandMagicERNS_17SummonAbilityListENS1_5TYPESE
+        void listupCommandNormal(this, SummonAbilityList& list); -> _ZN2pl6Player19listupCommandNormalERNS_17SummonAbilityListE
+        // ys::MagicDefenseParameter&
+        void magicDefense(this, ys::MagicDefenseParameter& outParam, s16, s16, s16, s16, s16); -> _ZN2pl6Player12magicDefenseERN2ys21MagicDefenseParameterEsssss
+        // (s32)m_MagicDefensePower
+        s32 magicDefensePower(this); -> _ZN2pl6Player17magicDefensePowerEv
+        // -> saveParam+0x14
+        void* mp(this); -> _ZN2pl6Player2mpEv
+        // ys::PhysicsAttackParameter&
+        void physicsAttack(this, ys::PhysicsAttackParameter& outParam, s16, s16, s16, s16, s16); -> _ZN2pl6Player13physicsAttackERN2ys22PhysicsAttackParameterEsssss
+        // ys::PhysicsDefenseParameter&
+        void physicsDefense(this, ys::PhysicsDefenseParameter& outParam, s16, s16, s16, s16, s16); -> _ZN2pl6Player14physicsDefenseERN2ys23PhysicsDefenseParameterEsssss
+        // Sub-object accessors
+        // -> self+0x8
+        void* playerAbilityManager(this); -> _ZN2pl6Player20playerAbilityManagerEv
+        void recoverHPandMP(this); -> _ZN2pl6Player14recoverHPandMPEv
+        void releaseEquipItem(this, s32 point); -> _ZN2pl6Player16releaseEquipItemEi
+        void removeEquipmentSymbol(this); -> _ZN2pl6Player21removeEquipmentSymbolEv
+        void removeEquipmentSymbolOne(this, HAND_TYPE hand); -> _ZN2pl6Player24removeEquipmentSymbolOneENS_9HAND_TYPEE
+        u64 saveParameter(this); -> _ZN2pl6Player13saveParameterEv
+        void setExp(this, u8 arg); -> _ZN2pl6Player6setExpEh
+        void setHp(this, u8 arg); -> _ZN2pl6Player5setHpEh
+        void setParameter(this, u8 current_lv, u8 next_lv); -> _ZN2pl6Player12setParameterEhh
+        void setPhysicsAttack(this); -> _ZN2pl6Player16setPhysicsAttackEv
+        // Abilities / magic
+        // common::BabilMagicParameter*
+        u8 spendMp(this, common::BabilMagicParameter* magicParam); -> _ZN2pl6Player7spendMpEPN6common19BabilMagicParameterE
+        void stonePaletteName(this, c8* out); -> _ZN2pl6Player16stonePaletteNameEPc
+        void updateCondition(this); -> _ZN2pl6Player15updateConditionEv
+        void updateEquipmentSymbol(this); -> _ZN2pl6Player21updateEquipmentSymbolEv
+        void updateParameter(this); -> _ZN2pl6Player15updateParameterEv
+        void useApple(this, bool arg); -> _ZN2pl6Player8useAppleEb
+        void useSomaDrop(this); -> _ZN2pl6Player11useSomaDropEv
+    }
+
+    PlayerParty {
+        // Holds 15 inline Players (stride 0x230 from +0x50), a PlayerSummon, a
+        // CurrentAbilityIDList, save/active-member pointer pairs, chain-loaded lookup
+        // tables, and 5 BattleCommands. Sub-objects with unknown layouts are raw byte
+        // arrays so the static_asserts below stay verifiable.
+        0x0    : Player*[5] SaveComposition;
+        // active party, indexed 0..4 by "order"
+        0x28   : Player*[5] Members;
+        // 15 inline Players;
+        // m_Id offsets: 0x15c, 0x38c, 0x5bc, 0x7ec,
+        // 0xa1c, 0xc4c, 0xe7c, 0x10ac, 0x12dc, 0x150c,
+        // 0x173c, 0x196c, 0x1b9c, 0x1dcc, 0x1ffc
+        0x50   : Player[15] Players;
+        0x2120 : u8[0x28] PlayerSummon;
+        0x2148 : u8[0x98] CurrentAbilityIDList;
+        // owned, freed by free()
+        0x21e0 : void* RawChainData;
+        // chain 0 (unused by dumped funcs)
+        0x21e8 : void* LearnChain0;
+        // chain 1, stride 0x14
+        0x21f0 : void* NormalAttack;
+        // chain 0x20, stride 0x20
+        0x21f8 : void* NormalMagic;
+        0x2200 : s16 NormalMagicCount;
+        // chains 2..0x10, per PLAYER_TYPES
+        0x2208 : void*[15] LearnAbilityData;
+        // chain 0x21, stride 8, 0xe68 bytes
+        0x2280 : void* AbilityList;
+        // chain 0x22, stride 0x6c
+        0x2288 : void* LayoutSceneParameter;
+        0x2290 : s32 LayoutSceneParameterCount;
+        // chain 0x23, stride 0x30
+        0x2298 : void* WeaponOffsetParameter;
+        // chains 0x11..0x1f, per PLAYER_TYPES
+        0x22a0 : void*[15] LearnAbilityLookup;
+        0x2318 : s16[15] LearnAbilityCount;
+        // ceil(rawSize/0x14)
+        0x2338 : u32 NormalAttackCount;
+        // chain 0x24, stride 0xa
+        0x2340 : void* AbilityBounsTable;
+        // ceil(rawSize/0xa)
+        0x2348 : u32 AbilityBounsCount;
+        0x234c : BattleCommand[5] BattleCommands;
+
+        s16* abilityBouns(this, common::ABILITY_ID abilityId); -> _ZN2pl11PlayerParty12abilityBounsEN6common10ABILITY_IDE
+        void* abilityList(this, s32 id); -> _ZN2pl11PlayerParty11abilityListEi
+        void addItem(this, s32 itemId, s32 qty); -> _ZN2pl11PlayerParty7addItemEii
+        // order==-1 → first free
+        Player* addMember(this, PLAYER_TYPES id, s32 order); -> _ZN2pl11PlayerParty9addMemberENS_12PLAYER_TYPESEi
+        s32 aliveNumber(this); -> _ZN2pl11PlayerParty11aliveNumberEv
+        u32 averageLevel(this, PLAYER_TYPES id); -> _ZN2pl11PlayerParty12averageLevelENS_12PLAYER_TYPESE
+        void changeFormation(); -> _ZN2pl11PlayerParty15changeFormationEv
+        void changeMember(this, PLAYER_TYPES idA, PLAYER_TYPES idB); -> _ZN2pl11PlayerParty12changeMemberENS_12PLAYER_TYPESES1_
+        void changeMemberForOrder(this, u8 orderA, u8 orderB); -> _ZN2pl11PlayerParty20changeMemberForOrderEhh
+        void changeStonePalette(this, bool); -> _ZN2pl11PlayerParty18changeStonePaletteEb
+        void changeStonePaletteForEvent(this, bool); -> _ZN2pl11PlayerParty26changeStonePaletteForEventEb
+        // Battle commands
+        void clearBattleCommand(this); -> _ZN2pl11PlayerParty18clearBattleCommandEv
+        void clearBattleCommandPlayer(this, s32 index); -> _ZN2pl11PlayerParty24clearBattleCommandPlayerEi
+        void clearBattleCondition(this); -> _ZN2pl11PlayerParty20clearBattleConditionEv
+        // Lifecycle
+        void Ctor(this); -> _ZN2pl11PlayerPartyC2Ev
+        void Dtor(this); -> _ZN2pl11PlayerPartyD2Ev
+        void fineAll(this); -> _ZN2pl11PlayerParty7fineAllEv
+        // Formation (forward to sys::GameParameter)
+        u32 formation(this, u8 index); -> _ZN2pl11PlayerParty9formationEh
+        void free(this); -> _ZN2pl11PlayerParty4freeEv
+        void initForNewgame(this, bool keepPlotItems); -> _ZN2pl11PlayerParty14initForNewgameEb
+        void initialize(this); -> _ZN2pl11PlayerParty10initializeEv
+        void initializeName(this); -> _ZN2pl11PlayerParty14initializeNameEv
+        u8 isCommand(this, common::ABILITY_ID abilityId); -> _ZN2pl11PlayerParty9isCommandEN6common10ABILITY_IDE
+        bool isEnableMember(this); -> _ZN2pl11PlayerParty14isEnableMemberEv
+        u8 isFrogAll(this); -> _ZN2pl11PlayerParty9isFrogAllEv
+        u8 isJoinedParty(this, PLAYER_TYPES id); -> _ZN2pl11PlayerParty13isJoinedPartyENS_12PLAYER_TYPESE
+        bool isLearnByLevelUp(this, pl::PLAYER_TYPES playerType, common::ABILITY_ID abilityId); -> _ZN2pl11PlayerParty16isLearnByLevelUpENS_12PLAYER_TYPESEN6common10ABILITY_IDE
+        u8 isLilliputAll(this); -> _ZN2pl11PlayerParty13isLilliputAllEv
+        bool isPartyFull(this); -> _ZN2pl11PlayerParty11isPartyFullEv
+        s16* layoutSceneParameter(this, s32 id); -> _ZN2pl11PlayerParty20layoutSceneParameterEi
+        void* learningAbility(this, PLAYER_TYPES playerType, s32 index); -> _ZN2pl11PlayerParty15learningAbilityENS_12PLAYER_TYPESEi
+        // Static-data lookups
+        // panics if level > 99
+        void* levelParameter(this, PLAYER_TYPES playerType, s8 level); -> _ZN2pl11PlayerParty14levelParameterENS_12PLAYER_TYPESEc
+        void listupCommand(this, SummonAbilityList& list); -> _ZN2pl11PlayerParty13listupCommandERNS_17SummonAbilityListE
+        // "player.chaindata.lz"
+        u8 load(this); -> _ZN2pl11PlayerParty4loadEv
+        void loadComposition(this); -> _ZN2pl11PlayerParty15loadCompositionEv
+        Player* member(this, PLAYER_TYPES id); -> _ZN2pl11PlayerParty6memberENS_12PLAYER_TYPESE
+        Player* memberForOrder(this, u8 order); -> _ZN2pl11PlayerParty14memberForOrderEh
+        s32 memberOrder(this, PLAYER_TYPES id); -> _ZN2pl11PlayerParty11memberOrderENS_12PLAYER_TYPESE
+        s16* normalAttack(this, s32 id); -> _ZN2pl11PlayerParty12normalAttackEi
+        s16* normalMagic(this, s32 id); -> _ZN2pl11PlayerParty11normalMagicEi
+        s32 partyMemberEnableNumber(this); -> _ZN2pl11PlayerParty23partyMemberEnableNumberEv
+        Player* player(this, PLAYER_TYPES id); -> _ZN2pl11PlayerParty6playerENS_12PLAYER_TYPESE
+        u8 releaseMember(this, PLAYER_TYPES id); -> _ZN2pl11PlayerParty13releaseMemberENS_12PLAYER_TYPESE
+        // Composition save/restore
+        void saveComposition(this); -> _ZN2pl11PlayerParty15saveCompositionEv
+        void setFormation(PARTY_FORMATION_TYPES formation); -> _ZN2pl11PlayerParty12setFormationENS_21PARTY_FORMATION_TYPESE
+        // Member management
+        // id==-1 → nullptr
+        void setMemberForOrder(this, PLAYER_TYPES id, s32 order); -> _ZN2pl11PlayerParty17setMemberForOrderENS_12PLAYER_TYPESEi
+        void setSaveStartCommand(this, s32 slot, s32 val); -> _ZN2pl11PlayerParty19setSaveStartCommandEii
+        void* weaponOffsetParameter(this, itm::WEAPON_SYSTEM weaponSystem); -> _ZN2pl11PlayerParty21weaponOffsetParameterEN3itm13WEAPON_SYSTEME
+
+        Player InvalidPlayer; -> _ZN2pl11PlayerParty13InvalidPlayerE
+        this playerPartyInstance_; -> _ZN2pl11PlayerParty20playerPartyInstance_E
+
+        // 0xc-byte slot, packed: m_StartCommand is an unaligned u64 at offset 0x4
+        // (str x from 0x2350+i*0xc in clearBattleCommandPlayer).
+        BattleCommand[0xc] {
+            0x0 : u32 Field0;
+            0x4 : u64 StartCommand;
+        }
+    }
+
+    SummonAbilityList {
+        enum TYPES u32 {}
+    }
+}
+
+ScriptEngine {
+    u8 getByte(this); -> _ZN12ScriptEngine7getByteEv
+    u32 getDword(this); -> _ZN12ScriptEngine8getDwordEv
+    u32 jump(this, u32 target); -> _ZN12ScriptEngine4jumpEj
+}
+
+sys {
+    // Game-wide save-data container (0x3dc0 bytes total). Layout: SaveHeader (0x20),
+    // SaveDisplayPartyInfo (0x70), 5× ys::Condition (0x14 each starting at 0x30),
+    // config flags (0x94), 15× PlayerSaveParameter (0x1c0 each starting at 0x9c),
+    // SummonSaveParameter (0xb4 @ 0x191c), PartySaveData (0x84c @ 0x19d0),
+    // WorldSaveData (0x138 @ 0x221c), BattleSaveData (8 @ 0x2354),
+    // EventSaveData (0x10c @ 0x235c, holds 2×1000-bit flag arrays at 0x2360/0x23e3),
+    // PleasureSaveData (0x208 @ 0x2468), NavimapSaveData (0x1744 @ 0x2670).
+    GameParameter {
+        0x94 : u16 flags;
+
+        u8* abilityName(this); -> _ZN3sys13GameParameter11abilityNameEv
+        void changeFormation(this); -> _ZN3sys13GameParameter15changeFormationEv
+        u8 coverNum(const this); -> _ZNK3sys13GameParameter8coverNumEv
+        void Ctor(this); -> _ZN3sys13GameParameterC2Ev
+        s32 fieldSymbolID(const this); -> _ZNK3sys13GameParameter13fieldSymbolIDEv
+        u8 formation(this); -> _ZN3sys13GameParameter9formationEv
+        u8 gameClearCount(this); -> _ZN3sys13GameParameter14gameClearCountEv
+        void getBlackChocoboHome(this, VecFx32& outPos); -> _ZN3sys13GameParameter19getBlackChocoboHomeER7VecFx32
+        u8 getDesionDataValidity(this); -> _ZN3sys13GameParameter21getDesionDataValidityEv
+        c8* getDesionMapName(this, s32 historyNo); -> _ZN3sys13GameParameter16getDesionMapNameEi
+        u8* getDesionPosition(this, s32 historyNo); -> _ZN3sys13GameParameter17getDesionPositionEi
+        void getDesionRot(this, s32 historyNo, s16& outX, s16& outY, s16& outZ); -> _ZN3sys13GameParameter12getDesionRotEiRsS1_S1_
+        u8 getMagishipMoonChipX(this); -> _ZN3sys13GameParameter20getMagishipMoonChipXEv
+        u8 getMagishipMoonChipZ(this); -> _ZN3sys13GameParameter20getMagishipMoonChipZEv
+        void getMagishipPosOffsetOnMoonChip(this, VecFx32& outPos); -> _ZN3sys13GameParameter30getMagishipPosOffsetOnMoonChipER7VecFx32
+        void getMagshipEarthPos(this, VecFx32& outPos); -> _ZN3sys13GameParameter18getMagshipEarthPosER7VecFx32
+        void getMagshipMoonPos(this, VecFx32& outPos); -> _ZN3sys13GameParameter17getMagshipMoonPosER7VecFx32
+        c8* getMapName(this); -> _ZN3sys13GameParameter10getMapNameEv
+        void* getPassagePoint2(this, s32 index); -> _ZN3sys13GameParameter16getPassagePoint2Ei
+        u8 getSaveNo(this); -> _ZN3sys13GameParameter9getSaveNoEv
+        s16* getSaveNum(this); -> _ZN3sys13GameParameter10getSaveNumEv
+        u8 getTVMode(); -> _ZN3sys13GameParameter9getTVModeEv
+        u8* getWorldPlayerPosition(this); -> _ZN3sys13GameParameter22getWorldPlayerPositionEv
+        void getWorldPlayerRotation(this, s32& outX, s32& outY, s32& outZ); -> _ZN3sys13GameParameter22getWorldPlayerRotationERiS1_S1_
+        u8* getWorldTelepoMapName(this); -> _ZN3sys13GameParameter21getWorldTelepoMapNameEv
+        u8* getWorldTelepoPosition(this); -> _ZN3sys13GameParameter22getWorldTelepoPositionEv
+        void getWorldTelepoRotation(this, s32& outX, s32& outY, s32& outZ); -> _ZN3sys13GameParameter22getWorldTelepoRotationERiS1_S1_
+        u8* getWorldVehiclePosition(this, s32 index); -> _ZN3sys13GameParameter23getWorldVehiclePositionEi
+        void getWorldVehicleRotation(this, s32 index, s32& outX, s32& outY, s32& outZ); -> _ZN3sys13GameParameter23getWorldVehicleRotationEiRiS1_S1_
+        u8 getWorldVehicleStay(this, s32 index); -> _ZN3sys13GameParameter19getWorldVehicleStayEi
+        s32* gold(this); -> _ZN3sys13GameParameter4goldEv
+        void gpCopy(void* dst); -> _ZN3sys13GameParameter6gpCopyEPv
+        void gpInitialize(this); -> _ZN3sys13GameParameter12gpInitializeEv
+        void gpLoadDataReflect(this); -> _ZN3sys13GameParameter17gpLoadDataReflectEv
+        void incrementCoverNum(this); -> _ZN3sys13GameParameter17incrementCoverNumEv
+        void incrementGameClearCount(this); -> _ZN3sys13GameParameter23incrementGameClearCountEv
+        u8 isAutoMode(this); -> _ZN3sys13GameParameter10isAutoModeEv
+        u8 isCloudGuideShowed(const this); -> _ZNK3sys13GameParameter18isCloudGuideShowedEv
+        bool isDash(); -> _ZN3sys13GameParameter6isDashEv
+        bool isPlayVoice(const this); -> _ZNK3sys13GameParameter11isPlayVoiceEv
+        bool isShowConteEventTelop(const this); -> _ZNK3sys13GameParameter21isShowConteEventTelopEv
+        u8 isTVMode(); -> _ZN3sys13GameParameter8isTVModeEv
+        itm::PossessionItemManager* item(this); -> _ZN3sys13GameParameter4itemEv
+        u8* monsterManiaManager(this); -> _ZN3sys13GameParameter19monsterManiaManagerEv
+        u8* musicPlayerMode(this); -> _ZN3sys13GameParameter15musicPlayerModeEv
+        c8* playerName(); -> _ZN3sys13GameParameter10playerNameEv
+        PlayerSaveParameter* playerSaveParameter(this, pl::PLAYER_TYPES playerType); -> _ZN3sys13GameParameter19playerSaveParameterEN2pl12PLAYER_TYPESE
+        u32* playTime(this); -> _ZN3sys13GameParameter8playTimeEv
+        void previousSaveData(this); -> _ZN3sys13GameParameter16previousSaveDataEv
+        void prevSaveForFlag(this); -> _ZN3sys13GameParameter15prevSaveForFlagEv
+        void prevSaveForNavimap(this); -> _ZN3sys13GameParameter18prevSaveForNavimapEv
+        void prevSaveForNavimapAsync(this); -> _ZN3sys13GameParameter23prevSaveForNavimapAsyncEv
+        void prevSaveForTime(this); -> _ZN3sys13GameParameter15prevSaveForTimeEv
+        void print(this); -> _ZN3sys13GameParameter5printEv
+        void printMemory(); -> _ZN3sys13GameParameter11printMemoryEv
+        void reflectForFlag(this); -> _ZN3sys13GameParameter14reflectForFlagEv
+        void reflectForNavimap2(this); -> _ZN3sys13GameParameter18reflectForNavimap2Ev
+        void reflectForTime(); -> _ZN3sys13GameParameter14reflectForTimeEv
+        u8* rrc(this); -> _ZN3sys13GameParameter3rrcEv
+        void setAutoMode(this, bool autoMode); -> _ZN3sys13GameParameter11setAutoModeEb
+        void setBlackChocoboHome(this, const VecFx32& pos); -> _ZN3sys13GameParameter19setBlackChocoboHomeERK7VecFx32
+        void setCloudGuideShowed(this, bool showed); -> _ZN3sys13GameParameter19setCloudGuideShowedEb
+        void setDash(this, bool dash); -> _ZN3sys13GameParameter7setDashEb
+        void setDesionDataValidity(this, bool valid); -> _ZN3sys13GameParameter21setDesionDataValidityEb
+        void setDesionMapName(this, s32 historyNo, const c8* name); -> _ZN3sys13GameParameter16setDesionMapNameEiPKc
+        void setDesionPosition(this, s32 historyNo, VecFx32& pos); -> _ZN3sys13GameParameter17setDesionPositionEiR7VecFx32
+        void setDesionRot(this, s32 historyNo, s16 x, s16 y, s16 z); -> _ZN3sys13GameParameter12setDesionRotEisss
+        void setFieldSymbolID(this, s32 id); -> _ZN3sys13GameParameter16setFieldSymbolIDEi
+        void setFormation(this, pl::PARTY_FORMATION_TYPES formation); -> _ZN3sys13GameParameter12setFormationEN2pl21PARTY_FORMATION_TYPESE
+        void setMagishipMoonChipX(this, u8 x); -> _ZN3sys13GameParameter20setMagishipMoonChipXEh
+        void setMagishipMoonChipZ(this, u8 z); -> _ZN3sys13GameParameter20setMagishipMoonChipZEh
+        void setMagishipPosOffsetOnMoonChip(this, const VecFx32& pos); -> _ZN3sys13GameParameter30setMagishipPosOffsetOnMoonChipERK7VecFx32
+        void setMagshipEarthPos(this, const VecFx32& pos); -> _ZN3sys13GameParameter18setMagshipEarthPosERK7VecFx32
+        void setMagshipMoonPos(this, const VecFx32& pos); -> _ZN3sys13GameParameter17setMagshipMoonPosERK7VecFx32
+        void setMapName(this, const c8* name); -> _ZN3sys13GameParameter10setMapNameEPKc
+        void setMonsterManiaManager(this, mon::MonsterManiaManager& srcManager); -> _ZN3sys13GameParameter22setMonsterManiaManagerERN3mon19MonsterManiaManagerE
+        void setPartsHeaderStr(this); -> _ZN3sys13GameParameter17setPartsHeaderStrEv
+        void setPassagePoint2(this, s32 index, u32* data); -> _ZN3sys13GameParameter16setPassagePoint2EiPj
+        void setPlayTime(this, u32 playTime); -> _ZN3sys13GameParameter11setPlayTimeEj
+        void setResetCloudGuideShowed(); -> _ZN3sys13GameParameter24setResetCloudGuideShowedEv
+        void setSaveNo(this, u8 saveNo); -> _ZN3sys13GameParameter9setSaveNoEh
+        void setSaveNum(this, s32 index, s32 value); -> _ZN3sys13GameParameter10setSaveNumEii
+        void setTVMode(this, s32 tvMode); -> _ZN3sys13GameParameter9setTVModeEi
+        void setWorldPlayerPosition(this, VecFx32 pos); -> _ZN3sys13GameParameter22setWorldPlayerPositionE7VecFx32
+        void setWorldPlayerRotation(this, s32 x, s32 y, s32 z); -> _ZN3sys13GameParameter22setWorldPlayerRotationEiii
+        void setWorldTelepoMapName(this, const c8* name); -> _ZN3sys13GameParameter21setWorldTelepoMapNameEPKc
+        void setWorldTelepoPosition(this, VecFx32 pos); -> _ZN3sys13GameParameter22setWorldTelepoPositionE7VecFx32
+        void setWorldTelepoRotation(this, s32 x, s32 y, s32 z); -> _ZN3sys13GameParameter22setWorldTelepoRotationEiii
+        void setWorldVehiclePosition(this, s32 index, VecFx32 pos); -> _ZN3sys13GameParameter23setWorldVehiclePositionEi7VecFx32
+        void setWorldVehicleRotation(this, s32 index, s32 x, s32 y, s32 z); -> _ZN3sys13GameParameter23setWorldVehicleRotationEiiii
+        void setWorldVehicleStay(this, s32 index, u8 stay); -> _ZN3sys13GameParameter19setWorldVehicleStayEih
+        u8* summonSaveParameter(this); -> _ZN3sys13GameParameter19summonSaveParameterEv
+
+        this gpInstance_; -> _ZN3sys13GameParameter11gpInstance_E
+
+        PlayerSaveParameter {
+            0x1b6 : ys::BodyParameter BodyParameter;
+        }
+    }
+
+    GGlobal {
+        part::GAMEPART getCurrentPart(); -> _ZN3sys7GGlobal14getCurrentPartEv
+        void setNextPart(part::GAMEPART part); -> _ZN3sys7GGlobal11setNextPartEN4part8GAMEPARTE
+
+        void* heapBGM_; -> _ZN3sys7GGlobal8heapBGM_E
+        void* heapSE_; -> _ZN3sys7GGlobal7heapSE_E
+        void* heapSound_; -> _ZN3sys7GGlobal10heapSound_E
+    }
+}
+
+sys2d {
+    Sprite3d[0x198] {
+        0xe8 : u32 Flags;
+        0xf8 : s32 PosX;
+        0xfc : s32 PosY;
+    }
+}
+
+title {
+    Title2Ds {
+        0x150  : sys2d::Sprite3d Continue;
+        0x2e8  : sys2d::Sprite3d NewGame;
+        0x480  : sys2d::Sprite3d LoadGame;
+        0x948  : sys2d::Sprite3d FF4TAY;
+        0xae0  : sys2d::Sprite3d CloudSave;
+        0xc78  : sys2d::Sprite3d PrivacyPolicy;
+        0xe10  : sys2d::Sprite3d GooglePlay;
+        0xfa8  : sys2d::Sprite3d Achievements;
+        0x1140 : sys2d::Sprite3d SQEX;
+        0x1548 : u32 ContentMask;
+        0x154c : u32 FocusedIndex;
+    }
+
+    TitleContents {
+        0x8 : Title2Ds Title2Ds;
+
+        void update(this); -> _ZN5title13TitleContents6updateEv
+    }
+
+    TitleSubState {
+        0x0 : TitleContents* TitleContents;
+        0xc : u32 HoveredIdx;
+
+        void update(this); -> _ZN5title13TitleSubState6updateEv
+    }
+}
+
+ui {
+    CWidgetMng g_WidgetMng; -> _ZN2ui11g_WidgetMngE
+
+    CWidgetMng {
+        // hash table of widget chains, bucket = id & 0x3f
+        0x000 : Widget*[0x40] WidgetTable;
+        // source data ptr for type-4 sprite widgets (addWidget); cleared in init/terminate
+        0x200 : void* field_0x200;
+        // source data ptr for type-5/6 sprite widgets (addWidget); cleared in init/terminate
+        0x208 : void* field_0x208;
+        // widget id currently selected/pressed (confirmed against the
+        // raw disassembly; Ghidra's pseudocode mislabels this field).
+        0x210 : s32 SelectedElement;
+        // scratch state shared by moveWidget (previous-frame hover id)
+        // and moveSlide (next slide-state value); same 4 bytes, two uses.
+        0x214 : s32 field_0x214;
+        // write-only from these 31 functions; mirrors m_SelectedElement
+        // whenever it changes, presumably read by code outside CWidgetMng.
+        0x218 : s32 FocusedElement;
+        // write-only from these 31 functions; same mirroring as field_0x218.
+        0x21c : s32 field_0x21c;
+        // frame counter for press-and-hold on m_SelectedElement
+        0x220 : s32 SelectedHoldFrames;
+        // touch-anchor widget id snapshot
+        0x224 : u32 field_0x224;
+        // previous touch x
+        0x228 : s16 field_0x228;
+        // previous touch y
+        0x22a : s16 field_0x22a;
+        // touch-down x
+        0x22c : s16 field_0x22c;
+        // touch-down y
+        0x22e : s16 field_0x22e;
+        // touch panel was down last frame
+        0x230 : bool WasTouching;
+        // set via setDragState
+        0x231 : bool DragState;
+        // moveSlide() state machine state
+        0x234 : s32 SlideState;
+        // current slide offset (signed, animates back to 0)
+        0x238 : s32 SlideOffset;
+        // +1/-1 direction multiplier for the active slide
+        0x23c : s32 SlideDirection;
+        // x passed to NNS_G2dSetSlide, set by setSlide
+        0x240 : s32 SlideX;
+        // y passed to NNS_G2dSetSlide, set by setSlide
+        0x244 : s32 SlideY;
+        // touch x sampled when the slide drag began
+        0x248 : s16 TouchAnchorX;
+        // touch y sampled when the slide drag began
+        0x24a : s16 TouchAnchorY;
+        // current scroll offset, set by setScroll(Pos/Rect)
+        0x24c : s32 ScrollPos;
+        // max scrollable extent (setScroll param_3 / setScrollRect param_5)
+        0x250 : s32 ScrollMax;
+        // x passed to NNS_G2dSetScroll
+        0x254 : s32 ScrollX;
+        // y passed to NNS_G2dSetScroll
+        0x258 : s32 ScrollY;
+        // extra scroll-rect width, only set by setScrollRect
+        0x25c : s32 field_0x25c;
+        // viewport height, set by setScroll(param_2)/setScrollRect(param_4)
+        0x260 : s32 ScrollHeight;
+        // scroll/select animation inertia value
+        0x264 : float ScrollVelocity;
+        // indexed directly by cursor id (1..6); slot 0 is unused padding,
+        // so the array really spans ids 0..6 and id 6's slot is the same
+        // 4 bytes as m_ListMax[0] below (harmless aliasing in the original).
+        0x268 : s32[6] CursorItem;
+        // set/read via setListMax/getListMax; m_ListMax[0] aliases the
+        // cursor-id-6 slot above (same bytes, reused by the original code)
+        0x280 : s32[2] ListMax;
+        // gates the pad-driven selection shortcut in moveWidget
+        0x288 : bool PadCheckEnable;
+        // pad bitmask checked (with 0x10000) to jump to active cursor item
+        0x28c : u32 PadMaskSelect;
+        // pad bitmask checked for the "no selection yet" shortcut
+        0x290 : u32 PadMaskCancel;
+        // per-frame pad callback, default set by setDefaultPadKeyFunc
+        0x298 : uptr PadKeyFunc;
+        // argument passed to m_PadKeyFunc
+        0x2a0 : s32 PadKeyFuncArg;
+
+        // type (flags & 0xff): 1=line-list row, 2=scrollbar-list row, 3=window (BasicWindow), 4/5/6=sprite
+        // (cell anim) widgets, 7/8/9/10=plain rects of increasing NNS_G2dAddWidget style index.
+        void addWidget(this, s32 id, s32 x, s32 y, s32 width, s32 height, s32 text_color, s32 msd, u32 flags); -> _ZN2ui10CWidgetMng9addWidgetEiiiiiiii
+        void cleanWidget(this); -> _ZN2ui10CWidgetMng11cleanWidgetEv
+        void DefaultPadKeyFunc(this, s32 padMask, bool playSE); -> _ZN2ui10CWidgetMng17DefaultPadKeyFuncEib
+        // -> DefaultPadKeyFunc_LineMulti(.., 2, ..)
+        void DefaultPadKeyFunc_Line2(this, s32 padMask, bool playSE); -> _ZN2ui10CWidgetMng23DefaultPadKeyFunc_Line2Eib
+        // -> DefaultPadKeyFunc_LineMulti(.., 3, ..)
+        void DefaultPadKeyFunc_Line3(this, s32 padMask, bool playSE); -> _ZN2ui10CWidgetMng23DefaultPadKeyFunc_Line3Eib
+        void DefaultPadKeyFunc_LineMulti(this, s32 padMask, s32 lineWidth, bool playSE); -> _ZN2ui10CWidgetMng27DefaultPadKeyFunc_LineMultiEiib
+        void deleteWidget(this, Widget* widget); -> _ZN2ui10CWidgetMng12deleteWidgetEPNS_6WidgetE
+        // count==1: delete single id; else delete [id, id+count) range
+        void deleteWidgetRange(this, s32 id, s32 count); -> _ZN2ui10CWidgetMng12deleteWidgetEii
+        // thunk -> drawWidget() on the global g_WidgetMng instance
+        void draw(); -> _ZN2ui10CWidgetMng4drawEv
+        void drawWidget(this); -> _ZN2ui10CWidgetMng10drawWidgetEv
+        // moveWidget() + moveSlide()
+        void execute(this); -> _ZN2ui10CWidgetMng7executeEv
+        // lookup only; result discarded by the original (likely dead code)
+        void findWidget(this, s32 id); -> _ZN2ui10CWidgetMng10findWidgetEi
+        // first of cursors 1..6 whose widget isn't flagged 0x4
+        s32 getActiveCursor(this); -> _ZN2ui10CWidgetMng15getActiveCursorEv
+        // m_CursorItem[getActiveCursor()]
+        s32 getActiveCursorItem(this); -> _ZN2ui10CWidgetMng19getActiveCursorItemEv
+        // m_ListMax[0 or 1] for the active cursor's item bucket
+        s32 getActiveCursorListMax(this); -> _ZN2ui10CWidgetMng22getActiveCursorListMaxEv
+        s32 getCursorItem(this, s32 cursor); -> _ZN2ui10CWidgetMng13getCursorItemEi
+        // index < 2
+        s32 getListMax(this, s32 index); -> _ZN2ui10CWidgetMng10getListMaxEi
+        void initialize(this); -> _ZN2ui10CWidgetMng10initializeEv
+        void moveSlide(this); -> _ZN2ui10CWidgetMng9moveSlideEv
+        void moveWidget(this); -> _ZN2ui10CWidgetMng10moveWidgetEv
+        void setCursor(this, s32 newWidgetId, s32 anchorWidgetId, s32 msd, u32 flags, bool updateCursorTable); -> _ZN2ui10CWidgetMng9setCursorEiiiib
+        void setDefaultPadKeyFunc(this); -> _ZN2ui10CWidgetMng20setDefaultPadKeyFuncEv
+        void setDragState(this, bool dragging); -> _ZN2ui10CWidgetMng12setDragStateEb
+        // index < 2
+        void setListMax(this, s32 index, s32 max); -> _ZN2ui10CWidgetMng10setListMaxEii
+        void setScroll(this, s32 y, s32 height, s32 max); -> _ZN2ui10CWidgetMng9setScrollEiii
+        void setScrollPos(this, s32 pos); -> _ZN2ui10CWidgetMng12setScrollPosEi
+        void setScrollRect(this, s32 x, s32 y, s32 width, s32 height, s32 max); -> _ZN2ui10CWidgetMng13setScrollRectEiiiii
+        void setSlide(this, s32 x, s32 y); -> _ZN2ui10CWidgetMng8setSlideEii
+        void setWidgetEnable(this, s32 idStart, s32 idCount, s8 enable); -> _ZN2ui10CWidgetMng15setWidgetEnableEiic
+        void setWidgetHilight(this, s32 idStart, s32 idCount, s32 hilightId); -> _ZN2ui10CWidgetMng16setWidgetHilightEiii
+        void terminate(this); -> _ZN2ui10CWidgetMng9terminateEv
+    }
+
+    // A single widget node, allocated individually (malloc_count(0x38)) and stored
+    // in CWidgetMng::cls::m_WidgetTable as a singly-linked list, hashed by (id & 0x3f).
+    Widget[0x38] {
+        0x00 : u32 id;
+        0x04 : s32 x;
+        0x08 : s32 y;
+        0x0c : s32 width;
+        0x10 : s32 height;
+        0x14 : s32 textColor;
+        0x18 : s32 msd;
+        // bit0..7: widget "type" (switch in drawWidget); 0x200: scroll-relative;
+        // 0x400: alt size variant; 0x800: alt hilight style; 0x1000: disabled
+        // (setWidgetEnable); 0x2000: hilighted/selected (setWidgetHilight);
+        // 0x4000: dgs msd-name special case (addWidget)
+        0x1c : u32 flags;
+        // menu::BasicWindow*, only allocated for type 3 widgets
+        0x20 : void* basicWindow;
+        // sys2d::Sprite*/Sprite3d*, allocated for type 4/5/6 widgets
+        0x28 : void* sprite;
+        // next node in this bucket's chain
+        0x30 : Widget* next;
+    }
+}
+
+world {
+    enum VIBRATION_STATE u32 {
+        NONE: 0;
+        A: 1;
+        B: 2;
+    }
+
+    bool canChangeSymbol(); -> _ZN5world15canChangeSymbolEv
+    void disableSPSetting(WorldStateContext* self); -> _ZN5world16disableSPSettingEPNS_17WorldStateContextE
+    void enableSPSetting(WorldStateContext* self); -> _ZN5world15enableSPSettingEPNS_17WorldStateContextE
+    void MSSTextScreenClear(msg::CANVAS canvas); -> _ZN5world18MSSTextScreenClearEN3msg6CANVASE
+    s32 searchNextSymbolByCharacterIDBackward(s32 id); -> _ZN5world37searchNextSymbolByCharacterIDBackwardEi
+    s32 searchNextSymbolByCharacterIDForward(s32 id); -> _ZN5world36searchNextSymbolByCharacterIDForwardEi
+
+    CCameraVibration {
+        0x0  : s32 State;
+        0x8  : s32 CurrentTime;
+        0xc  : s32 TotalTime;
+        0x18 : VecFx32 Amplitude;
+        0x24 : VecFx32 LastPosition;
+        0x30 : VecFx32 Offset;
+
+        void ccbUpdate(this, VecFx32& out1, VecFx32& out2); -> _ZN5world16CCameraVibration9ccbUpdateER7VecFx32S2_
+        void startVibration(this, VIBRATION_STATE state, s32 time, s32 ticks, s32 x, s32 y, s32 z, bool flag); -> _ZN5world16CCameraVibration14startVibrationENS0_15VIBRATION_STATEEiiiiib
+    }
+
+    MSSConfig {
+        void* mssInitialize(this); -> _ZN5world9MSSConfig13mssInitializeEv
+        void* mssProcess(this); -> _ZN5world9MSSConfig10mssProcessEv
+    }
+
+    WorldCamera {}
+
+    WorldState {
+        c8* wsGetString(this); -> _ZN5world10WorldState11wsGetStringEv
+        void wsSetEnd(this, bool); -> _ZN5world10WorldState8wsSetEndEb
+    }
+
+    WorldStateContext {
+        0x60  : WorldCamera WorldCamera;
+        0x160 : object::CharacterObject PlayerCharacter;
+    }
+
+    WorldStateScheduler {
+        bool wssAddStateSchedule(this, const c8* state); -> _ZN5world19WorldStateScheduler19wssAddStateScheduleEPKc
+        WorldState* wssGetCurrentState(const this); -> _ZNK5world19WorldStateScheduler18wssGetCurrentStateEv
+        void wssInitialize(this); -> _ZN5world19WorldStateScheduler13wssInitializeEv
+    }
+
+    WorldTask {
+        void deleteTask(const c8* task); -> _ZN5world9WorldTask10deleteTaskEPKc
+        void* queryTask(const c8* task); -> _ZN5world9WorldTask9queryTaskEPKc
+    }
+
+    WSMove {
+        bool wsIsMenuOpen(this, WorldStateContext* wsc); -> _ZN5world6WSMove12wsIsMenuOpenEPNS_17WorldStateContextE
+        u64 wsmEncount(this, WorldStateContext* wsc); -> _ZN5world6WSMove10wsmEncountEPNS_17WorldStateContextE
+        void WSMove(this); -> _ZN5world6WSMoveC1Ev
+    }
+
+    WSVehicleMove {
+        0x50 : WorldStateScheduler* WSS;
+        0x6c : bool m_bool;
+
+        u64 wsProcess(this, WorldStateContext* wsc); -> _ZN5world13WSVehicleMove9wsProcessEPNS_17WorldStateContextE
+    }
+}
+
+ys {
+    struct PhysicsAttackParameter {}
+
+    struct PhysicsDefenseParameter {}
+
+    struct MagicDefenseParameter {}
+
+    BodyParameter {
+        0x0 : u8 Strength;
+        0x1 : u8 Speed;
+        0x2 : u8 Stamina;
+        0x3 : u8 Intellect;
+        0x4 : u8 Spirit;
+        0x6 : s16 MaxMP;
+    }
+
+    Condition {
+        bool isNotBattleCondition(this); -> _ZN2ys9Condition20isNotBattleConditionEv
+    }
+}
+
+:start babil.h
+namespace dgs {
+    inline DGSMSD* DGSMSD_ALL = reinterpret_cast<DGSMSD*>(-1);
+}
+:end babil.h

@@ -121,14 +121,14 @@ void loadFaceTextures() {
     }
 }
 
-static int getMemberIDForOrder(u8 order) {
+static s32 getMemberIDForOrder(u8 order) {
     if (order > 5)
         return -1;
     pl::Player::cls* member = pl::PlayerParty::memberForOrder(pl::PlayerParty::playerPartyInstance_, order);
     if (member == pl::PlayerParty::InvalidPlayer) {
         return -1;
     }
-    return member->m_PlayerType;
+    return (s32)member->m_PlayerType;
 }
 
 static int idx = 0;

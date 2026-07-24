@@ -5,6 +5,7 @@
 namespace game {
 void start();
 void init();
+void launch();
 extern bool g_menuOpen;
 extern bool g_playerSelectOpen;
 extern bool g_encountersEnabled;

@@ -18,7 +18,7 @@ namespace game {
     extern babil::Font::cls* FontInstance_;
 }
 namespace jni {
-    extern char fake_env[0x1000];
+    extern s8 fake_env[0x1000];
     void patch();
 }
 }

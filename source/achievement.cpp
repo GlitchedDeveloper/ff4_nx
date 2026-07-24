@@ -5,7 +5,6 @@
 #include <deque>
 #include <fstream>
 #include <string>
-#include <unordered_map>
 
 #include "babil.h"
 #include "base64.h"
@@ -402,7 +401,7 @@ float get_progress(u8 id) {
         auto gp = sys::GameParameter::gpInstance_;
         if (gp != nullptr) {
             const auto& param = achievementParams[id];
-            if (param.m_Type == enAchievementCheckTypes_Flag) {
+            if (param.m_Type == enAchievementCheckTypes::Flag) {
                 auto flagManager = FlagManager::singleton();
                 if (flagManager) {
                     int complete = 0,
@@ -420,7 +419,7 @@ float get_progress(u8 id) {
 
                     result = (float)complete / (float)total * 100.0f;
                 }
-            } else if (param.m_Type == enAchievementCheckTypes_FlagRange) {
+            } else if (param.m_Type == enAchievementCheckTypes::FlagRange) {
                 auto flagManager = FlagManager::singleton();
                 if (flagManager) {
                     int complete = 0,
@@ -440,9 +439,9 @@ float get_progress(u8 id) {
 
                     result = (float)complete / (float)total * 100.0f;
                 }
-            } else if (param.m_Type == enAchievementCheckTypes_BeatCount) {
+            } else if (param.m_Type == enAchievementCheckTypes::BeatCount) {
                 result = (float)sys::GameParameter::gameClearCount(gp) / (float)param.m_BeatCountParam.m_Count * 100.0f;
-            } else if (param.m_Type == enAchievementCheckTypes_GetItem) {
+            } else if (param.m_Type == enAchievementCheckTypes::GetItem) {
                 auto pim = sys::GameParameter::item(gp);
                 if (pim) {
                     int complete = 0,
@@ -476,7 +475,7 @@ float get_progress(u8 id) {
 
                     result = (float)complete / (float)total * 100.0f;
                 }
-            } else if (param.m_Type == enAchievementCheckTypes_GetDecant) {
+            } else if (param.m_Type == enAchievementCheckTypes::GetDecant) {
                 int complete = 0,
                     total    = 0;
 
@@ -490,7 +489,7 @@ float get_progress(u8 id) {
                 }
 
                 result = (float)complete / (float)total * 100.0f;
-            } else if (param.m_Type == enAchievementCheckTypes_GetDecantCnt) {
+            } else if (param.m_Type == enAchievementCheckTypes::GetDecantCnt) {
                 int complete = 0;
 
                 for (u8 i = 0; i < 39; i++) {
@@ -500,13 +499,13 @@ float get_progress(u8 id) {
                 }
 
                 result = (float)complete / (float)param.m_GetDecantCntParam.m_Count * 100.0f;
-            } else if (param.m_Type == enAchievementCheckTypes_LearnSummon) {
+            } else if (param.m_Type == enAchievementCheckTypes::LearnSummon) {
                 int complete = 0,
                     total    = 0;
 
                 for (u8 i = 0; i < 30; i++) {
                     auto& condition = param.m_LearnSummonParam[i];
-                    if (condition.m_Player < 0)
+                    if ((s32)condition.m_Player < 0)
                         break;
                     total++;
                     auto player        = pl::PlayerParty::player(pl::PlayerParty::playerPartyInstance_, condition.m_Player);
@@ -521,7 +520,7 @@ float get_progress(u8 id) {
                 }
 
                 result = (float)complete / (float)total * 100.0f;
-            } else if (param.m_Type == enAchievementCheckTypes_LearnSummonCnt) {
+            } else if (param.m_Type == enAchievementCheckTypes::LearnSummonCnt) {
                 auto flagManager = FlagManager::singleton();
                 if (flagManager) {
                     auto& condition = param.m_LearnSummonCntParam;
@@ -554,13 +553,13 @@ float get_progress(u8 id) {
                         }
                     }
                 }
-            } else if (param.m_Type == enAchievementCheckTypes_OverPlayerLevel) {
+            } else if (param.m_Type == enAchievementCheckTypes::OverPlayerLevel) {
                 int complete = 0,
                     total    = 0;
 
                 for (u8 i = 0; i < 30; i++) {
                     auto& condition = param.m_OverPlayerLevelParam[i];
-                    if (condition.m_Player < 0)
+                    if ((s32)condition.m_Player < 0)
                         break;
 
                     total += condition.m_Level;
@@ -581,9 +580,9 @@ float get_progress(u8 id) {
                 }
 
                 result = (float)complete / (float)total * 100.0f;
-            } else if (param.m_Type == enAchievementCheckTypes_Gill) {
+            } else if (param.m_Type == enAchievementCheckTypes::Gill) {
                 result = (float)*sys::GameParameter::gold(gp) / (float)param.m_GillParam.m_Amount * 100.0f;
-            } else if (param.m_Type == enAchievementCheckTypes_MonsterKillCount) {
+            } else if (param.m_Type == enAchievementCheckTypes::MonsterKillCount) {
                 auto mrdm = *mr::MRDMng;
                 if (mrdm != nullptr) {
                     u32 kills = 0.0f;
@@ -597,14 +596,14 @@ float get_progress(u8 id) {
                         auto mm       = mon::MonsterManiaManager::monsterMania(mmm, (s32)monsterId);
 
                         if (mm != nullptr) {
-                            kills += mm->m_Bits.m_KillCount;
+                            kills += mm->m_KillCount;
                         }
                     }
                     result = (float)kills / (float)param.m_MonsterKillCountParam.m_Count * 100.0f;
                 }
-            } else if (param.m_Type == enAchievementCheckTypes_MonsterDictionary) {
+            } else if (param.m_Type == enAchievementCheckTypes::MonsterDictionary) {
                 result = (float)mr::getCompleteRate() / (float)param.m_MonsterDictionaryParam.m_Amount * 100.0f;
-            } else if (param.m_Type == enAchievementCheckTypes_AchievementComp) {
+            } else if (param.m_Type == enAchievementCheckTypes::AchievementComp) {
                 int unlocked_count = 0;
                 for (int i = 0; i < achievementCount; i++) {
                     if (i == id)

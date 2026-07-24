@@ -333,7 +333,7 @@ void handleSpecialKeys() {
         }
         if (kDown & keybinds[SpecialButton_ChocoboMenu]) {
             auto current_part = sys::GGlobal::getCurrentPart();
-            if (current_part == BabilGamePart_WorldPart) {
+            if (current_part == part::GAMEPART::WorldPart) {
                 world::WorldStateScheduler::cls* wss = patches::game::wssInstance_;
                 if (wss != nullptr) {
                     world::WorldState::cls* ws = world::WorldStateScheduler::wssGetCurrentState(wss);
@@ -342,7 +342,7 @@ void handleSpecialKeys() {
                         if (strcmp(state_name, "world move") == 0) {
                             ::menu::playMenuSE(4);
                             babil::world::WorldStateScheduler::wssAddStateSchedule(wss, "chokobo_menu");
-                            babil::world::WorldState::wsSetEnd(ws);
+                            babil::world::WorldState::wsSetEnd(ws, false);
                         }
                     }
                 }
@@ -376,7 +376,7 @@ s32 getKeyEvent() {
     if (kHeld & keybinds[SpecialButton_BattlePause]) {
         if (isModifierPressed || !config::require_modifier_for_battle_pause) {
             auto current_part = sys::GGlobal::getCurrentPart();
-            if (current_part == BabilGamePart_BattlePart) {
+            if (current_part == part::GAMEPART::BattlePart) {
                 if (kHeld & keybinds[SpecialButton_BattlePause]) {
                     game::g_UseFakeTouch = true;
                     game::g_FakeTouch[0] = 0.88f;
@@ -414,7 +414,7 @@ s32 getKeyEvent() {
 
     if (config::swap_in_vehicle) {
         auto current_part = sys::GGlobal::getCurrentPart();
-        if (current_part == BabilGamePart_WorldPart) {
+        if (current_part == part::GAMEPART::WorldPart) {
             world::WorldStateScheduler::cls* wss = patches::game::wssInstance_;
             if (wss != nullptr) {
                 world::WorldState::cls* ws = world::WorldStateScheduler::wssGetCurrentState(wss);

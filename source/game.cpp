@@ -282,6 +282,17 @@ void start() {
     static AppletOperationMode lastMode = (AppletOperationMode)-1;
     static bool hasSetFontScale         = false;
     static int frame                    = 0;
+
+    if (!g_Launched) {
+        *babil::g_env                    = patches::jni::fake_env;
+        uintptr_t snd_heap               = (uintptr_t)babil::malloc_count(0x81000);
+        uintptr_t bgm_heap               = snd_heap + 0x28800;
+        *babil::sys::GGlobal::heapSound_ = (void*)snd_heap;
+        *babil::sys::GGlobal::heapSE_    = (void*)snd_heap;
+        *babil::sys::GGlobal::heapBGM_   = (void*)bgm_heap;
+        babil::ds::snd::dssndInitialize((babil::ds::snd::DSSoundDesc*)bgm_heap);
+    }
+
     while (appletMainLoop()) {
 
         AppletOperationMode currentMode = appletGetOperationMode();
@@ -343,6 +354,8 @@ void start() {
                 drawCapturedFrame();
             }
         } else {
+            babil::NNS_SndUpdate();
+            babil::ds::snd::dssndUpdate();
             g_menuOpen = true;
         }
 
@@ -394,6 +407,18 @@ void start() {
     pad_manager::exit();
 }
 
+void launch() {
+    babil::ds::snd::DSSoundHeap::dsshFinalize(babil::ds::snd::g_SoundHeapBGM);
+    babil::ds::snd::DSSoundHeap::dsshFinalize(babil::ds::snd::g_SoundHeapSE);
+    if (*babil::sys::GGlobal::heapSound_ != nullptr) {
+        babil::free_count(*babil::sys::GGlobal::heapSound_);
+        *babil::sys::GGlobal::heapSound_ = nullptr;
+        *babil::sys::GGlobal::heapSE_    = nullptr;
+        *babil::sys::GGlobal::heapBGM_   = nullptr;
+    }
+    g_Launched = true;
+    g_menuOpen = false;
+}
 }
 
 extern "C" void release_egl(void) {

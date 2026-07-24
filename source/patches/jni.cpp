@@ -402,7 +402,7 @@ float CallStaticFloatMethod(void* env, void* obj, int methodID, ...) {
     return CallStaticFloatMethodV(env, obj, methodID, args_array);
 }
 
-char fake_env[0x1000];
+s8 fake_env[0x1000];
 int InitEnv() {
     for (int i = 0; i < (int)(sizeof(fake_env) / sizeof(uintptr_t)); i++)
         ((uintptr_t*)fake_env)[i] = (uintptr_t)ret0;

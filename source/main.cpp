@@ -56,7 +56,7 @@ static void check_syscalls() {
     if (!envIsSyscallHinted(0x73))
         fatal_error("svcSetProcessMemoryPermission is unavailable.");
     if (envGetOwnProcessHandle() == INVALID_HANDLE)
-        fatal_error("Own process handle is unavailable.\nTitle Takeover required:\n1. Install a game in Ryujinx\n2. Hold R while launching it\n3. Select bully_nx.nro from Hbmenu");
+        fatal_error("Own process handle is unavailable.\nTitle Takeover required:\n1. Install a game in Ryujinx\n2. Hold R while launching it\n3. Select ff4.nro from Hbmenu");
 }
 
 AccountUid getUid() {

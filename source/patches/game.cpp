@@ -51,15 +51,15 @@ void OSi_Panic(const char* file, int line, const char* message) {
 namespace sys {
     namespace GGlobal {
         DECLARE_TRAMPOLINE(babil::sys::GGlobal::setNextPart, setNextPart_t);
-        void setNextPart(u32 part) {
+        void setNextPart(babil::part::GAMEPART part) {
             debugPrintf("setNextPart(%d)\n", part);
             auto currentPart = babil::sys::GGlobal::getCurrentPart();
-            if (currentPart == babil::BabilGamePart_MoviePart) {
-                return setNextPart_t(babil::BabilGamePart_TitlePart);
+            if (currentPart == babil::part::GAMEPART::MoviePart) {
+                return setNextPart_t(babil::part::GAMEPART::TitlePart);
             }
             if (config::game_startup_part > -1) {
-                if (currentPart == babil::BabilGamePart_BackupRomFormatPart && part == babil::BabilGamePart_CompanyLogoPart) {
-                    return setNextPart_t(config::game_startup_part);
+                if (currentPart == babil::part::GAMEPART::BackupRomFormatPart && part == babil::part::GAMEPART::CompanyLogoPart) {
+                    return setNextPart_t((babil::part::GAMEPART)config::game_startup_part);
                 }
             }
             return setNextPart_t(part);
@@ -288,12 +288,12 @@ namespace world {
 
     namespace CCameraVibration {
         DECLARE_TRAMPOLINE(babil::world::CCameraVibration::startVibration, startVibration_t);
-        void startVibration(babil::world::CCameraVibration::cls* self, babil::world::CCameraVibration::VIBRATION_STATE state, s32 time, s32 ticks, s32 x, s32 y, s32 z, u8 unk) {
+        void startVibration(babil::world::CCameraVibration::cls* self, babil::world::VIBRATION_STATE state, s32 time, s32 ticks, s32 x, s32 y, s32 z, u8 unk) {
             debugPrintf("startVibration(%i, %i, %i, %i, %i, %i, %i)\n", state, time, ticks, x, y, z, unk);
             return startVibration_t(self, state, time, ticks, x, y, z, unk);
         }
         DECLARE_TRAMPOLINE(babil::world::CCameraVibration::ccbUpdate, ccbUpdate_t);
-        void ccbUpdate(babil::world::CCameraVibration::cls* self, babil::VecFx32* a, babil::VecFx32* b) {
+        void ccbUpdate(babil::world::CCameraVibration::cls* self, babil::VecFx32& a, babil::VecFx32& b) {
             float absX = fabsf(self->m_Amplitude.x);
             float absY = fabsf(self->m_Amplitude.y);
             float absZ = fabsf(self->m_Amplitude.z);
@@ -337,21 +337,20 @@ namespace btl {
 
     namespace BattleCommandSelector {
         DECLARE_TRAMPOLINE(babil::btl::BattleCommandSelector::initialize, initialize_t);
-        void initialize(babil::btl::BattleCommandSelector::cls* self, babil::btl::BattleSystem::cls* system, babil::btl::BattlePlayer::cls* player) {
+        void initialize(babil::btl::BattleCommandSelector::cls* self, babil::btl::BattleSystem::cls& system, babil::btl::BattlePlayer::cls* player) {
             g_LastBattlePlayerId = babil::btl::BattlePlayer::playerId(player);
             initialize_t(self, system, player);
         }
         DECLARE_TRAMPOLINE(babil::btl::BattleCommandSelector::commandAction, commandAction_t);
-        u32 commandAction(babil::btl::BattleCommandSelector::cls* self, babil::btl::BattleSystem::cls* system, int _int, babil::btl::BattleCommandSelector::ABILITY_ID abilityId) {
-            debugPrintf("commandAction: %d %d\n", _int, abilityId);
-            return commandAction_t(self, system, _int, abilityId);
+        u32 commandAction(babil::btl::BattleCommandSelector::cls* self, babil::btl::BattleSystem::cls& system, s32 a, babil::common::ABILITY_ID abilityId, s8 b) {
+            return commandAction_t(self, system, a, abilityId, b);
         }
     }
 
     namespace Battle2DManager {
         DECLARE_TRAMPOLINE(babil::btl::Battle2DManager::ctrlWidgetCheck, ctrlWidgetCheck_t);
         bool ctrlWidgetCheck(babil::btl::Battle2DManager::cls* self, babil::btl::Battle2DManager::WIDGET_CTRL_TYPE type) {
-            if (type == babil::btl::Battle2DManager::Widget_Pause && g_ShouldTogglePause) {
+            if (type == babil::btl::Battle2DManager::WIDGET_CTRL_TYPE::Pause && g_ShouldTogglePause) {
                 g_ShouldTogglePause = false;
                 return true;
             }
@@ -363,79 +362,79 @@ namespace btl {
         DECLARE_TRAMPOLINE(babil::btl::BattleDebugParameter::flag, flag_t);
         bool flag(babil::btl::BattleDebugParameter::cls* self, babil::btl::DEBUG_FLAG flag) {
             switch (flag) {
-                case babil::btl::SURELY_MAX_DAMAGE:
+                case babil::btl::DEBUG_FLAG::SURELY_MAX_DAMAGE:
                     if (config::SURELY_MAX_DAMAGE)
                         return true;
                     break;
-                case babil::btl::QUICK_WAIT:
+                case babil::btl::DEBUG_FLAG::QUICK_WAIT:
                     if (config::QUICK_WAIT)
                         return true;
                     break;
-                case babil::btl::ENEMY_INVINCIBLE:
+                case babil::btl::DEBUG_FLAG::ENEMY_INVINCIBLE:
                     if (config::ENEMY_INVINCIBLE)
                         return true;
                     break;
-                case babil::btl::FRIEND_INVINCIBLE:
+                case babil::btl::DEBUG_FLAG::FRIEND_INVINCIBLE:
                     if (config::FRIEND_INVINCIBLE)
                         return true;
                     break;
-                case babil::btl::RESTART:
+                case babil::btl::DEBUG_FLAG::RESTART:
                     if (config::RESTART)
                         return true;
                     break;
-                case babil::btl::SURELY_ESCAPE:
+                case babil::btl::DEBUG_FLAG::SURELY_ESCAPE:
                     if (config::SURELY_ESCAPE)
                         return true;
                     break;
-                case babil::btl::SURELY_CONDITION:
+                case babil::btl::DEBUG_FLAG::SURELY_CONDITION:
                     if (config::SURELY_CONDITION)
                         return true;
                     break;
-                case babil::btl::TRANSFIX:
+                case babil::btl::DEBUG_FLAG::TRANSFIX:
                     if (config::TRANSFIX)
                         return true;
                     break;
-                case babil::btl::MDEF_INVALIDATION:
+                case babil::btl::DEBUG_FLAG::MDEF_INVALIDATION:
                     if (config::MDEF_INVALIDATION)
                         return true;
                     break;
-                case babil::btl::QUICK_EVENT:
+                case babil::btl::DEBUG_FLAG::QUICK_EVENT:
                     if (config::QUICK_EVENT)
                         return true;
                     break;
-                case babil::btl::SURELY_HIT:
+                case babil::btl::DEBUG_FLAG::SURELY_HIT:
                     if (config::SURELY_HIT)
                         return true;
                     break;
-                case babil::btl::SURELY_MISS:
+                case babil::btl::DEBUG_FLAG::SURELY_MISS:
                     if (config::SURELY_MISS)
                         return true;
                     break;
-                case babil::btl::SURELY_CRITICAL:
+                case babil::btl::DEBUG_FLAG::SURELY_CRITICAL:
                     if (config::SURELY_CRITICAL)
                         return true;
                     break;
-                case babil::btl::MONSTER_STOP_ACTION:
+                case babil::btl::DEBUG_FLAG::MONSTER_STOP_ACTION:
                     if (config::MONSTER_STOP_ACTION)
                         return true;
                     break;
-                case babil::btl::DAMAGE_OVER_LIMIT:
+                case babil::btl::DEBUG_FLAG::DAMAGE_OVER_LIMIT:
                     if (config::DAMAGE_OVER_LIMIT)
                         return true;
                     break;
-                case babil::btl::OPEN_ENEMY_HP:
+                case babil::btl::DEBUG_FLAG::OPEN_ENEMY_HP:
                     if (config::OPEN_ENEMY_HP)
                         return true;
                     break;
-                case babil::btl::PHYSICS_RANDOM_MAX:
+                case babil::btl::DEBUG_FLAG::PHYSICS_RANDOM_MAX:
                     if (config::PHYSICS_RANDOM_MAX)
                         return true;
                     break;
-                case babil::btl::MAGIC_RANDOM_MAX:
+                case babil::btl::DEBUG_FLAG::MAGIC_RANDOM_MAX:
                     if (config::MAGIC_RANDOM_MAX)
                         return true;
                     break;
-                case babil::btl::QUICK_TURN:
+                case babil::btl::DEBUG_FLAG::QUICK_TURN:
                     if (config::QUICK_TURN)
                         return true;
                     break;
@@ -476,8 +475,8 @@ namespace btl {
 
     namespace BattleWin {
         DECLARE_TRAMPOLINE(babil::btl::BattleWin::possessGoldPhase, possessGoldPhase_t);
-        bool possessGoldPhase(babil::btl::BattleSystem::cls* self) {
-            bool result = possessGoldPhase_t(self);
+        bool possessGoldPhase(babil::btl::BattleSystem::cls& system) {
+            bool result = possessGoldPhase_t(system);
             s32* gill   = babil::sys::GameParameter::gold(babil::sys::GameParameter::gpInstance_);
             if (*gill > 9999999 && !config::remove_gil_limit)
                 *gill = 9999999;
@@ -488,13 +487,11 @@ namespace btl {
 
 namespace CCharacterMng {
     DECLARE_TRAMPOLINE(babil::CCharacterMng::setPause, setPause_t);
-    void setPause(babil::CCharacterMng::cls* self, int _int, bool _bool, u32 enTYPE) {
-        // debugPrintf("setPause(%d, %d, %d)", _int, _bool, enTYPE);
-        setPause_t(self, _int, _bool, enTYPE);
+    void setPause(babil::CCharacterMng::cls* self, int _int, bool _bool, babil::ds::sys3d::CAnimSet::enTYPE type) {
+        setPause_t(self, _int, _bool, type);
     }
     DECLARE_TRAMPOLINE(babil::CCharacterMng::setFrameRate, setFrameRate_t);
     void setFrameRate(babil::CCharacterMng::cls* self, babil::fx32 framerate) {
-        // debugPrintf("CCharacterMng::setFrameRate(%d)\n", framerate);
         setFrameRate_t(self, framerate / config::dfps_battles_mult);
     }
 }
@@ -506,7 +503,7 @@ namespace ds {
             babil::fx32 getFrameRate(babil::ds::sys3d::CAnimation::cls* self) {
                 // debugPrintf("CAnimation::getFrameRate\n");
                 auto framerate = getFrameRate_t(self);
-                if (config::dfps_battles_enabled && babil::sys::GGlobal::getCurrentPart() == babil::BabilGamePart_BattlePart) {
+                if (config::dfps_battles_enabled && babil::sys::GGlobal::getCurrentPart() == babil::part::GAMEPART::BattlePart) {
                     framerate /= config::dfps_battles_mult;
                 }
                 return framerate;
@@ -515,16 +512,16 @@ namespace ds {
             DECLARE_TRAMPOLINE(babil::ds::sys3d::CAnimation::ctor, ctor_t);
             void ctor(babil::ds::sys3d::CAnimation::cls* self) {
                 ctor_t(self);
-                if (config::dfps_battles_enabled && babil::sys::GGlobal::getCurrentPart() == babil::BabilGamePart_BattlePart) {
-                    self->framerate /= config::dfps_battles_mult;
+                if (config::dfps_battles_enabled && babil::sys::GGlobal::getCurrentPart() == babil::part::GAMEPART::BattlePart) {
+                    self->m_Framerate /= config::dfps_battles_mult;
                 }
             }
 
             DECLARE_TRAMPOLINE(babil::ds::sys3d::CAnimation::setup, setup_t);
             void setup(babil::ds::sys3d::CAnimation::cls* self, void* a, void* b, u32 c, void* d) {
                 setup_t(self, a, b, c, d);
-                if (config::dfps_battles_enabled && babil::sys::GGlobal::getCurrentPart() == babil::BabilGamePart_BattlePart) {
-                    self->framerate /= config::dfps_battles_mult;
+                if (config::dfps_battles_enabled && babil::sys::GGlobal::getCurrentPart() == babil::part::GAMEPART::BattlePart) {
+                    self->m_Framerate /= config::dfps_battles_mult;
                 }
             }
 
@@ -539,7 +536,7 @@ namespace ds {
             babil::fx32 getFrameRate(babil::ds::sys3d::CMotSet::cls* self) {
                 // debugPrintf("CMotSet::getFrameRate\n");
                 auto framerate = getFrameRate_t(self);
-                if (config::dfps_battles_enabled && babil::sys::GGlobal::getCurrentPart() == babil::BabilGamePart_BattlePart) {
+                if (config::dfps_battles_enabled && babil::sys::GGlobal::getCurrentPart() == babil::part::GAMEPART::BattlePart) {
                     framerate /= config::dfps_battles_mult;
                 }
                 return framerate;
@@ -563,31 +560,31 @@ namespace Font {
 }
 
 DECLARE_TRAMPOLINE(babil::NNS_G2dTickCellAnimation, NNS_G2dTickCellAnimation_t);
-void NNS_G2dTickCellAnimation(void* pCellAnim, babil::fx32 frames) {
+void NNS_G2dTickCellAnimation(babil::NNSG2dCellAnimation* pCellAnim, babil::fx32 frames) {
     NNS_G2dTickCellAnimation_t(pCellAnim, frames / config::dfps_battles_mult);
 }
 
 DECLARE_TRAMPOLINE(babil::babilCommand_ClearCountJump, babilCommand_ClearCountJump_t);
-void babilCommand_ClearCountJump(babil::ScriptEngine::cls* scriptEngine) {
+void babilCommand_ClearCountJump(babil::ScriptEngine::cls& scriptEngine) {
     if (config::remove_newgameplus_limit || config::reobtainable_limit_break) {
-        u8 clear_count = babil::ScriptEngine::getByte(scriptEngine);
-        u32 target     = babil::ScriptEngine::getDword(scriptEngine);
+        u8 clear_count = babil::ScriptEngine::getByte(&scriptEngine);
+        u32 target     = babil::ScriptEngine::getDword(&scriptEngine);
         if (clear_count == 2 && config::remove_newgameplus_limit)
             return;
         if (clear_count == 0 && config::reobtainable_limit_break)
-            babil::ScriptEngine::jump(scriptEngine, target);
+            babil::ScriptEngine::jump(&scriptEngine, target);
     } else {
         babilCommand_ClearCountJump_t(scriptEngine);
     }
 }
 
 DECLARE_TRAMPOLINE(babil::babilCommand_CE_CameraPos, babilCommand_CE_CameraPos_t);
-void babilCommand_CE_CameraPos(babil::ScriptEngine::cls* scriptEngine) {
+void babilCommand_CE_CameraPos(babil::ScriptEngine::cls& scriptEngine) {
     babilCommand_CE_CameraPos_t(scriptEngine);
 }
 
 DECLARE_TRAMPOLINE(babil::babilCommand_CE_SetupCameraMotion, babilCommand_CE_SetupCameraMotion_t);
-void babilCommand_CE_SetupCameraMotion(babil::ScriptEngine::cls* scriptEngine) {
+void babilCommand_CE_SetupCameraMotion(babil::ScriptEngine::cls& scriptEngine) {
     babilCommand_CE_SetupCameraMotion_t(scriptEngine);
 }
 
@@ -715,7 +712,7 @@ namespace pl {
 namespace itm {
     namespace EquipParameter {
         DECLARE_TRAMPOLINE(babil::itm::EquipParameter::canEquip, canEquip_t);
-        bool canEquip(babil::itm::EquipParameter::cls* self, u32 a) {
+        bool canEquip(babil::itm::EquipParameter::cls* self, babil::pl::PLAYER_TYPES a) {
             if (config::equip_anything)
                 return true;
             return canEquip_t(self, a);
@@ -751,23 +748,15 @@ namespace evt {
 }
 
 int getFieldSymbolID() {
-    if (babil::sys::GGlobal::getCurrentPart() == babil::BabilGamePart_WorldPart) {
+    if (babil::sys::GGlobal::getCurrentPart() == babil::part::GAMEPART::WorldPart) {
         return babil::sys::GameParameter::fieldSymbolID(babil::sys::GameParameter::gpInstance_);
     } else {
         return -1;
     }
 }
 
-int getMemberIDForPartyOrder(u8 order) {
-    babil::pl::Player::cls* member = babil::pl::PlayerParty::memberForOrder(babil::pl::PlayerParty::playerPartyInstance_, order);
-    if (member == babil::pl::PlayerParty::InvalidPlayer) {
-        return -1;
-    }
-    return member->m_PlayerType;
-}
-
 void test() {
-    if (babil::sys::GGlobal::getCurrentPart() == babil::BabilGamePart_WorldPart) {
+    if (babil::sys::GGlobal::getCurrentPart() == babil::part::GAMEPART::WorldPart) {
         // ::game::g_playerSelectOpen = true;
         debugPrintf("Is in Overworld = true\n");
         u32 symbolID = babil::sys::GameParameter::fieldSymbolID(babil::sys::GameParameter::gpInstance_);
@@ -789,7 +778,7 @@ void test() {
 
         // babil::pl::PlayerParty::addItem(babil::pl::PlayerParty::playerPartyInstance_, 0x23E0, 1);
     }
-    if (babil::sys::GGlobal::getCurrentPart() == babil::BabilGamePart_BattlePart) {
+    if (babil::sys::GGlobal::getCurrentPart() == babil::part::GAMEPART::BattlePart) {
         auto bp = babil::btl::BattlePart::instance_;
 
         // babil::ui::CWidgetMng::deleteWidgetRange(babil::ui::g_WidgetMng, 0x25, 1);

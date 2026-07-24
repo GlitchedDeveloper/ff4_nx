@@ -5,6 +5,9 @@
 This software is an unofficial, fan-made wrapper that allows for the AARCH64 Android version of Final Fantasy IV (3D Remake) to run natively on the Nintendo Switch with modern enhancements.
 
 ## Changelog
+### 1.0.4
+- Fixed launcher sound
+- Fixed launcher crash
 ### 1.0.3
 - Font Scale Option
 - Updated [Movie Player](https://github.com/NaGaa95/ff4_3d_nx/blob/main/source/movie_player.c)
@@ -115,11 +118,11 @@ cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 ```
 ### Note for Contributors
-`source/babil.h` contains structures and mappings reverse engineered from the original game binary (using tools like [Ghidra](https://github.com/nationalsecurityagency/ghidra)). Artificial intelligence was used to assist in mapping out large portions of this file quickly. This may lead to slight inaccuracies that should be verified manually. The human mapped portions can clearly be differentiated by the code style and comments. AI-generated code typically features:
+`source/babil.bsym` Is a custom IDL which contains structures and mappings reverse engineered from the original game binary (using tools like [Ghidra](https://github.com/nationalsecurityagency/ghidra)). Artificial intelligence was used to assist in mapping out large portions of this file quickly. This may lead to slight inaccuracies that should be verified manually. The human mapped portions can clearly be differentiated by the code style and comments. AI-generated code typically features:
 - **Excessive code comments:** Human written portions focus on descriptive function/variable names rather than relying on code comments.
 - **Stripped pointers:** AI occasionally defaults to `void*` instead of defining a named, blank struct.
 
-Contributors verifying and adjusting `source/babil.h` are highly welcome.
+Contributors verifying and adjusting `source/babil.bsym` are highly welcome. See [this](./bsym/README.md) for usage and integration into VSCode.
 
 ## Mod Development
 Currently, the only supported mods are in the form of asset replacement (Planned to be expanded in the future).

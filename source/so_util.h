@@ -13,9 +13,6 @@
 
 #include "types.h"
 
-#define GET_FUNCTION(name, symbol) name = reinterpret_cast<decltype(name)>(so::findAddr_rx(symbol))
-#define GET_VARIABLE(name, symbol) GET_FUNCTION(name, symbol)
-
 namespace so {
 #define ALIGN_MEM(x, align) (((x) + ((align) - 1)) & ~((align) - 1))
 

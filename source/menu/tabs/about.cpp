@@ -14,7 +14,7 @@ void About::update() {
     ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetTextLineHeight() * 0.25);
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
     ImGui::SetWindowFontScale(0.75f);
-    ImGui::TextUnformatted("Version 1.0.3");
+    ImGui::TextUnformatted("Version 1.0.4");
     ImGui::SetWindowFontScale(1.0f);
     ImGui::PopStyleColor();
 

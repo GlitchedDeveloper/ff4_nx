@@ -24,7 +24,7 @@ bool partyNeedsUpdate() {
         if (member == pl::PlayerParty::InvalidPlayer) {
             continue;
         }
-        if (g_SymbolToPlayer.find(member->m_PlayerType) == g_SymbolToPlayer.end()) {
+        if (g_SymbolToPlayer.find((s32)member->m_PlayerType) == g_SymbolToPlayer.end()) {
             player_select::open();
             return true;
         }
@@ -43,7 +43,7 @@ void setSymbol(s32 symbol, world::WorldStateScheduler::cls* wss, world::WorldSta
     world::WorldStateScheduler::wssAddStateSchedule(wss, "chgsym");
     world::WorldStateScheduler::wssAddStateSchedule(wss, currentState);
     *reinterpret_cast<bool*>(reinterpret_cast<u8*>(ws) + 0x77) = true;
-    world::WorldState::wsSetEnd(ws);
+    world::WorldState::wsSetEnd(ws, false);
 }
 
 bool isUsableSymbol(s32 symbol) {
@@ -203,9 +203,9 @@ s32 getKeyEvent() {
         return -1;
 
     auto current_part = sys::GGlobal::getCurrentPart();
-    if (current_part == BabilGamePart_WorldPart) {
+    if (current_part == part::GAMEPART::WorldPart) {
         return getWorldPart();
-    } else if (current_part == BabilGamePart_BattlePart) {
+    } else if (current_part == part::GAMEPART::BattlePart) {
         return getBattlePart();
     }
 
